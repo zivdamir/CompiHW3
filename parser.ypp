@@ -1,0 +1,150 @@
+%{
+    #include <iostream>
+    #include "hw3_output.hpp"
+
+    using namespace std;
+    using namespace output;
+    extern int yylineno;
+    int yylex();
+    void yyerror(const char*);
+%}
+%define parse.error verbose;
+%nonassoc VOID;
+%nonassoc INT;
+%nonassoc BYTE;
+%nonassoc B;
+%nonassoc BOOL;
+%nonassoc OVERRIDE;
+%nonassoc TRUE;
+%nonassoc FALSE;
+%nonassoc RETURN;
+
+%token V;
+%token ERROR;
+%nonassoc IF;
+%nonassoc WHILE;
+%nonassoc BREAK;
+%nonassoc CONTINUE;
+%nonassoc SC;
+%nonassoc COMMA;
+%nonassoc LBRACE;
+%nonassoc RBRACE;
+%nonassoc ID;                                                                      
+%nonassoc NUM;    
+%nonassoc STRING;
+
+%right ASSIGN;
+
+%left OR;
+%left AND;
+
+
+%left EQ_RELOP;
+%left RE_RELOP;
+%left PM_BINOP;
+%left MD_BINOP;
+
+%right NOT;
+%left LPAREN;
+%left RPAREN;
+%nonassoc ELSE;
+
+%%
+Program
+    : Funcs { printProductionRule(1); }
+    ;
+
+Funcs
+    : FuncDecl Funcs { printProductionRule(3); }
+    |/*epsilon*/ { printProductionRule(2); }
+    ;
+
+FuncDecl
+    : OverRide RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE { printProductionRule(4); }
+    ;
+OverRide
+    :/*epsilon*/ {printProductionRule(5);}
+    | OVERRIDE {printProductionRule(6);}
+    ;
+
+RetType
+    : VOID { printProductionRule(8); } 
+    | Type { printProductionRule(7); }
+    ;
+
+Formals
+    : /*epsilon*/ { printProductionRule(9); }
+    |FormalsList { printProductionRule(10); }
+    ;
+
+FormalsList
+    : FormalDecl { printProductionRule(11); }
+    | FormalDecl COMMA FormalsList { printProductionRule(12); }
+    ;
+FormalDecl
+    : Type ID { printProductionRule(13); }
+    ;
+
+Statements
+    : Statement { printProductionRule(14); }
+    | Statements Statement { printProductionRule(15); }
+    ;
+
+Statement
+    : LBRACE Statements RBRACE { printProductionRule(16); }
+    | Type ID SC { printProductionRule(17); }
+    | Type ID ASSIGN Exp SC { printProductionRule(18); }
+    | ID ASSIGN Exp SC { printProductionRule(19); }
+    | Call SC { printProductionRule(20); }
+    | RETURN SC { printProductionRule(21); }
+    | RETURN Exp SC { printProductionRule(22); }
+    | IF LPAREN Exp RPAREN Statement { printProductionRule(23); }
+    | IF LPAREN Exp RPAREN Statement ELSE Statement { printProductionRule(24); }
+    | WHILE LPAREN Exp RPAREN Statement { printProductionRule(25); }
+    | BREAK SC { printProductionRule(26); }
+    | CONTINUE SC { printProductionRule(27); }
+    ;
+
+Call
+    : ID LPAREN ExpList RPAREN { printProductionRule(28); }
+    | ID LPAREN RPAREN { printProductionRule(29); }
+    ;
+
+ExpList
+    : Exp { printProductionRule(30); }
+    | Exp COMMA ExpList { printProductionRule(31); }
+    ;
+
+Type
+    : INT { printProductionRule(32); }
+    | BYTE { printProductionRule(33); }
+    | BOOL { printProductionRule(34); }
+    ;
+
+Exp
+    : LPAREN Exp RPAREN { printProductionRule(35); }
+    | Exp MD_BINOP Exp %prec MD_BINOP { printProductionRule(36); }
+    | Exp PM_BINOP Exp %prec PM_BINOP { printProductionRule(36); }
+    | ID { printProductionRule(37); }
+    | Call { printProductionRule(38); }
+    | NUM { printProductionRule(39); }
+    | NUM B { printProductionRule(40); }
+    | STRING { printProductionRule(41); }
+    | TRUE { printProductionRule(42); }
+    | FALSE { printProductionRule(43); }
+    | NOT Exp { printProductionRule(44); }
+    | Exp AND Exp { printProductionRule(45); }
+    | Exp OR Exp { printProductionRule(46); }
+    | Exp EQ_RELOP Exp %prec EQ_RELOP { printProductionRule(47); }
+    | Exp RE_RELOP Exp %prec RE_RELOP { printProductionRule(47); }
+    | LPAREN Type RPAREN Exp { printProductionRule(48); }
+    ;
+
+%%
+void yyerror(const char* s ) { errorSyn(yylineno);}
+
+
+int main()
+{
+    return yyparse();
+}
