@@ -5,6 +5,11 @@
 #include "hw3_output.hpp"
 #include "tokens.hpp"
 #include "parser.tab.hpp"
+
+
+void allocate(char* name, char* type);
+
+
 %}
 
 %option yylineno
@@ -20,7 +25,7 @@ pm_binop                                        ([-+])
 relop                                           ([<>]=|>|<)
 eqop                                            ([=!]=)
 %%
-void                                                                                return VOID;
+void                                                                                {add_type_att("void");return VOID;}
 int                                                                                 return INT;
 byte                                                                                return BYTE;
 b                                                                                   return B;
@@ -49,10 +54,35 @@ continue                                                                        
 {md_binop}                                                                          return MD_BINOP;
 {pm_binop}                                                                          return PM_BINOP;
 {id}                                                                                return ID;                                                                      
-{num}                                                                               return NUM;    
+{num}                                                                               {return NUM;}    
 {string}                                                                            return STRING;
 {whitespace}*                                                                       ;
 {comment}                                                                           ;
 .                                                                                   {output::errorLex(yylineno);exit(0);}
 %%
 
+void add_name_att(char* name)
+{
+    if(name != nullptr)
+    {
+        yylval.name = (char*) malloc(sizeof(char)*(strlen(name)+1));
+        strcpy( yylval.name, name);
+    }
+    else
+    {
+        yylval.name = nullptr;
+    }
+
+}
+void add_type_att(char* type)
+{
+    if(type != nullptr)
+    {
+        yylval.type = (char*) malloc(sizeof(char)*(strlen(type)+1));
+        strcpy( yylval.type, type);
+    }
+    else
+    {
+        yylval.type = nullptr;
+    }
+}

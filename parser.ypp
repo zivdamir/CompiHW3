@@ -7,6 +7,7 @@
     extern int yylineno;
     int yylex();
     void yyerror(const char*);
+    
 %}
 %define parse.error verbose;
 %nonassoc VOID;
@@ -93,8 +94,8 @@ Statements
 Statement
     : LBRACE Statements RBRACE { printProductionRule(16); }
     | Type ID SC { printProductionRule(17); }
-    | Type ID ASSIGN Exp SC { printProductionRule(18); }
-    | ID ASSIGN Exp SC { printProductionRule(19); }
+    | Type ID ASSIGN Exp SC { if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno);; }
+    | ID ASSIGN Exp SC { if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); }
     | Call SC { printProductionRule(20); }
     | RETURN SC { printProductionRule(21); }
     | RETURN Exp SC { printProductionRule(22); }
@@ -116,32 +117,58 @@ ExpList
     ;
 
 Type
-    : INT { printProductionRule(32); }
-    | BYTE { printProductionRule(33); }
-    | BOOL { printProductionRule(34); }
+    : INT { $$.type = "int"; }
+    | BYTE { $$.type = "byte"; }
+    | BOOL { $$.type = "bool"; }
     ;
 
 Exp
     : LPAREN Exp RPAREN { printProductionRule(35); }
-    | Exp MD_BINOP Exp %prec MD_BINOP { printProductionRule(36); }
-    | Exp PM_BINOP Exp %prec PM_BINOP { printProductionRule(36); }
+    | Exp MD_BINOP Exp %prec MD_BINOP { if(Exp are not of type number) Error; $$.type=typeWithWidestRange)(/*addhere*/); }
+    | Exp PM_BINOP Exp %prec PM_BINOP { if(Exp are not of type number) Error; $$.type=typeWithWidestRange)(/*addhere*/); }
     | ID { printProductionRule(37); }
-    | Call { printProductionRule(38); }
-    | NUM { printProductionRule(39); }
-    | NUM B { printProductionRule(40); }
-    | STRING { printProductionRule(41); }
-    | TRUE { printProductionRule(42); }
-    | FALSE { printProductionRule(43); }
-    | NOT Exp { printProductionRule(44); }
-    | Exp AND Exp { printProductionRule(45); }
-    | Exp OR Exp { printProductionRule(46); }
-    | Exp EQ_RELOP Exp %prec EQ_RELOP { printProductionRule(47); }
-    | Exp RE_RELOP Exp %prec RE_RELOP { printProductionRule(47); }
-    | LPAREN Type RPAREN Exp { printProductionRule(48); }
+    | Call { $$.type=$$.type; }
+    | NUM { $$.type="int"; }
+    | NUM B { $$.type="byte"; }
+    | STRING { $$.type="string"; }
+    | TRUE { $$.type="bool"; }
+    | FALSE { $$.type="bool"; }
+    | NOT Exp { if(Exp not of type bool) Error; $$.type="bool"; }
+    | Exp AND Exp { if(Exp not of type bool) Error;$$.type="bool"; }
+    | Exp OR Exp { if(Exp not of type bool) Error; }
+    | Exp EQ_RELOP Exp %prec EQ_RELOP {  if(Exp not numbers) error; $$.type="bool"; }
+    | Exp RE_RELOP Exp %prec RE_RELOP {  if(Exp not numbers) error; $$.type="bool"; }
+    | LPAREN Type RPAREN Exp { if(badExplicitConvert(/*add here*/)) Error;}; }
     ;
 
 %%
 void yyerror(const char* s ) { errorSyn(yylineno);}
+
+bool typesDontMatch(const char* LHS_type, const char* RHS_type)
+{
+    if((strcmp(type1, type2) != 0)
+    && (!(strcmp(LHS_type, "int") == 0 && strcmp(RHS_type, "byte") == 0)))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool badExplicitConvert(const char* converter_type, const char* converted_type)
+{
+    if((converter_type=="int" && converted_type=="bool")
+         ||(converter_type=="bool" && converted_type=="int")
+         ||(converter_type=="int" && converted_type=="int")
+         ||(converter_type=="bool" && converted_type=="bool"))
+         {
+            return false
+         }
+    return true;
+}
+
+
+
+
 
 
 int main()
