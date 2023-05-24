@@ -12,6 +12,7 @@ typedef struct token_att {
     string name;
     } tokenAtt;
 
+
 #define YYSTYPE tokenAtt
 
 namespace output{
