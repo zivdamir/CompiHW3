@@ -15,12 +15,14 @@ class Table{
     bool contains_in_scope(string name, string type){
         bool found = false;
         if (!entries.empty())
+        {
             for (table_entry* entry: entries){
                 if(entry->name == name && entry->type == type){
 
                 }
-            {
+            }
         }
         return found;
-    }
+            }
+    
 };
