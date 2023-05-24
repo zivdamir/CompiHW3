@@ -1,3 +1,6 @@
+#ifndef COMPIHW3symbol_table_stack__
+#define COMPIHW3symbol_table_stack__
+#endif
 #include "symbol_table.hpp"
 #include <stack>
 #include <iostream>
@@ -11,9 +14,10 @@ class symbol_tables_stack{
         // offsets.push(0);
         stack<symbol_table*> tables;
         stack<int> offsets;
-        symbol_tables_stack():tables(),offsets(){
+        symbol_tables_stack(){
             symbol_table *global_scope = Maketable(nullptr,true);
-            push(offsets, 0);
+            int zero = 0;
+            push(offsets, zero);
             push(tables, global_scope); // init global scope
             //1.do we want to init a global scope with te construction
             //2. levi needs to undetrstands pop deletes the object!
@@ -24,7 +28,7 @@ class symbol_tables_stack{
             return new symbol_table(is_global,parent);
         }
         template <class T>
-        void push(stack<T> stack,T object)
+        void push(stack<T>& stack,T& object)
         {
             stack.push(object);
             return;
@@ -54,8 +58,10 @@ class symbol_tables_stack{
             return;
         }
         template <class T>
-        T top(stack<T> stack)
+        T top(stack<T>& stack)
         {
+            //int var =  offsets.top();
+            //cout << &var << endl;
             return stack.top();
         }
         symbol_table* get_global_scope(){
@@ -73,9 +79,9 @@ class symbol_tables_stack{
             assert(!this->tables.empty());
             return (this->tables.top()->parent == nullptr);
         }
-        void insert(symbol_table* table, string name,string type,int offset,bool is_func)
+        void insert(symbol_table* table, string name,string type,int offset,bool is_func, bool is_override,int yylineno)
         {
             assert(table != nullptr);
-            table->insert(name, type, offset, is_func);
+            table->insert(name, type, offset, is_func, is_override,yylineno);
         }
 };

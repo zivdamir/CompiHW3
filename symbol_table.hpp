@@ -1,5 +1,10 @@
+#ifndef COMPIHW3symbol_table__
+#define COMPIHW3symbol_table__
+#endif
 #include <vector>
+#include <iostream>
 #include "table_entry.hpp"
+#include "hw3_output.hpp"
 using namespace std;
 
 class symbol_table{
@@ -11,13 +16,19 @@ class symbol_table{
         {
         }
     //need to add Table~
-    void insert(string name,string type,int offset,bool is_func,bool is_override){
-        assert(!(!this->is_global_scope && is_func));//idk if should be condition or not todo
+    void insert(string name,string type,int offset,bool is_func,bool is_override,int yylineno){
+       if (!this->is_global_scope)
+       {
+           if (is_func)
+           {
+               assert(false);
+           }
+        }
         if (!is_func)
         {
             if(contains_in_current_scope(name,type))
             {
-                return;// maybe return error or something.
+                output::errorDef(yylineno,name);// maybe return error or something.
             }
             else{
                 table_entry *new_entry = new table_entry(name, offset, type);

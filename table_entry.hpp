@@ -1,3 +1,6 @@
+#ifndef table_entry__
+#define table_entry__
+#endif
 //this class/struct remsembles an entry in symbol table.
 #include <string>
 #include "assert.h"
@@ -15,7 +18,11 @@ class table_entry
     bool is_func; // perhaps could be deprecated
     table_entry(string name, int offset, string type ,bool is_func = false)
         : name(name), offset(offset), type(type),is_func(is_func) {
-        assert(this->is_func && this->offset == 0);//make sure functions offset is 0 .
+        if(this->is_func)
+        {
+            assert(this->offset == 0);
+        }
+        
     }
     string get_return_type(){
         if(!is_func){
