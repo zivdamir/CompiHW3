@@ -5,6 +5,15 @@
 #include <string>
 using namespace std;
 
+typedef struct token_att {
+    int intVal;
+    string strVal;
+    string type;
+    string name;
+    } tokenAtt;
+
+#define YYSTYPE tokenAtt
+
 namespace output{
     void endScope();
     void printID(const string& id, int offset, const string& type);

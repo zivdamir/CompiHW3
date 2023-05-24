@@ -7,6 +7,7 @@
     extern int yylineno;
     int yylex();
     void yyerror(const char*);
+    symbol_tables_stack stack = symbol_tables_stack();
     
 %}
 %define parse.error verbose;
@@ -52,7 +53,7 @@
 
 %%
 Program
-    : Funcs {   }
+    : Funcs {}
     ;
 
 Funcs
@@ -61,7 +62,7 @@ Funcs
     ;
 
 FuncDecl
-    : OverRide RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE {  }
+    : OverRide RetType ID LPAREN Formals RPAREN LBRACE {stack.pop();} Statements RBRACE {pop_table();}
     ;
 OverRide
     :/*epsilon*/ { }
@@ -79,7 +80,7 @@ Formals
     ;
 
 FormalsList
-    : FormalDecl {  }
+    : FormalDecl {$$.type = $1.type; $$.name = $2.name;}
     | FormalDecl COMMA FormalsList {  }
     ;
 FormalDecl
@@ -87,23 +88,23 @@ FormalDecl
     ;
 
 Statements
-    : Statement {  }
-    | Statements Statement {  }
+    : Statement {/*empty*/}
+    | Statements Statement {/*empty*/}
     ;
-
-Statement
-    : LBRACE Statements RBRACE { printProductionRule(16); }
-    | Type ID SC { printProductionRule(17); }
-    | Type ID ASSIGN Exp SC { if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno);; }
-    | ID ASSIGN Exp SC { if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); }
+x = 5;
+Statement 
+    : LBRACE {push_table();} Statements RBRACE {stack.pop();}
+    | Type ID SC { stack.insert($<name>2 , $<type>1, false, false, yylineno);}
+    | Type ID ASSIGN Exp SC { stack.insert($<name>2 , $<type>1, false, false, yylineno); if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); ; }
+    | ID ASSIGN Exp SC { if(!stack.NameExists($<name>1)) errorUndef(yylineno, $<name>1); if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); }
     | Call SC { printProductionRule(20); }
-    | RETURN SC { printProductionRule(21); }
-    | RETURN Exp SC { printProductionRule(22); }
-    | IF LPAREN Exp RPAREN Statement { printProductionRule(23); }
-    | IF LPAREN Exp RPAREN Statement ELSE Statement { printProductionRule(24); }
-    | WHILE LPAREN Exp RPAREN Statement { printProductionRule(25); }
-    | BREAK SC { printProductionRule(26); }
-    | CONTINUE SC { printProductionRule(27); }
+    | RETURN SC { if(!voidFunc()) error; }
+    | RETURN Exp SC { if(voidFunc()) error; }
+    | IF LPAREN Exp RPAREN Statement {if(notBool($<type>3)) errorMismatch;  }
+    | IF LPAREN Exp RPAREN Statement ELSE Statement { if(notBool($<type>3)) errorMismatch; }
+    | WHILE {stack.InsetInWhile(true);} LPAREN Exp RPAREN Statement {stack.InsetInWhile(falsee);}
+    | BREAK SC { if(stack.notInWhile()) errorUnexpectedBreak();}
+    | CONTINUE SC { if(stack.notInWhileLoop()) errorUnexpectedContinue();}
     ;
 
 Call
@@ -123,10 +124,10 @@ Type
     ;
 
 Exp
-    : LPAREN Exp RPAREN { printProductionRule(35); }
+    : LPAREN Exp RPAREN {$<type>$ = $<type>2;}
     | Exp MD_BINOP Exp %prec MD_BINOP { if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = biggerType($1.type, $3.type); }
     | Exp PM_BINOP Exp %prec PM_BINOP { if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = biggerType($1.type, $3.type); }
-    | ID { printProductionRule(37); }
+    | ID {/*if(!stack.NameExists($<name>1) || isFunc($<type>1)) errorUndef(yylineno, $1.name); $<type>$ = $<type>1; */}
     | Call { $<type>$=$<type>1; }
     | NUM { $<type>$=$<type>1; }
     | NUM B {if(byteTooLarge($<numVal>1) errorByteTooLarge(yylineno, $<strVal>1); $<type>$=$<type>1; }
@@ -176,10 +177,14 @@ bool notIntOrBool(const char* converter_type, const char* converted_type)
     return true;
 }
 
-
-
-
-
+bool isFunc(string type)
+{
+    if(type=="func")
+    {
+        return true;
+    }
+    return false;
+}
 
 int main()
 {
