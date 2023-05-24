@@ -12,14 +12,14 @@ class symbol_tables_stack{
         stack<symbol_table*> tables;
         stack<int> offsets;
         symbol_tables_stack():tables(),offsets(){
-            symbol_table *global_scope = Maketable(true,nullptr);
+            symbol_table *global_scope = Maketable(nullptr,true);
             push(offsets, 0);
             push(tables, global_scope); // init global scope
             //1.do we want to init a global scope with te construction
             //2. levi needs to undetrstands pop deletes the object!
             // inWhile = false;
         }//init tables and offset
-        static symbol_table* Maketable(bool is_global = false,symbol_table *parent)
+        static symbol_table* Maketable(symbol_table *parent,bool is_global)
         {
             return new symbol_table(is_global,parent);
         }

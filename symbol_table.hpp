@@ -11,7 +11,7 @@ class symbol_table{
         {
         }
     //need to add Table~
-    void insert(string name,string type,int offset,bool is_func){
+    void insert(string name,string type,int offset,bool is_func,bool is_override){
         assert(!(!this->is_global_scope && is_func));//idk if should be condition or not todo
         if (!is_func)
         {
@@ -43,5 +43,19 @@ class symbol_table{
         }
         return found;
     }
-    
+    bool contains(string name,string type)
+    {
+        bool is_contains = false;
+        symbol_table *curr_table = this;
+        while(curr_table != nullptr )
+        {
+            is_contains = curr_table->contains_in_current_scope(name, type);
+            if (is_contains)
+            {
+                break;
+            }
+            curr_table = curr_table->parent;
+        }
+        return is_contains; 
+    }
 };

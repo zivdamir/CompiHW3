@@ -29,7 +29,7 @@ class table_entry
             else return iterator.substr(position+2,length);
         }
     }
-    string get_function_parameters()
+    string get_function_parameters_types()
     {
         assert(this->is_func);//make sure this is func!, would crash otherwise
         string iterator = this->type;
