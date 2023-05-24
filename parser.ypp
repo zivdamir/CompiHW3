@@ -1,7 +1,7 @@
 %{
     #include <iostream>
+    #include <string>
     #include "hw3_output.hpp"
-
     using namespace std;
     using namespace output;
     extern int yylineno;
@@ -52,43 +52,43 @@
 
 %%
 Program
-    : Funcs { printProductionRule(1); }
+    : Funcs {   }
     ;
 
 Funcs
-    : FuncDecl Funcs { printProductionRule(3); }
-    |/*epsilon*/ { printProductionRule(2); }
+    : FuncDecl Funcs {    }
+    |/*epsilon*/ {   }
     ;
 
 FuncDecl
-    : OverRide RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE { printProductionRule(4); }
+    : OverRide RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE {  }
     ;
 OverRide
-    :/*epsilon*/ {printProductionRule(5);}
-    | OVERRIDE {printProductionRule(6);}
+    :/*epsilon*/ { }
+    | OVERRIDE { }
     ;
 
 RetType
-    : VOID { printProductionRule(8); } 
-    | Type { printProductionRule(7); }
+    : VOID { $$.type=$1.type } 
+    | Type { $$.type=$1.type }
     ;
 
 Formals
-    : /*epsilon*/ { printProductionRule(9); }
-    |FormalsList { printProductionRule(10); }
+    : /*epsilon*/ {  }
+    |FormalsList {  }
     ;
 
 FormalsList
-    : FormalDecl { printProductionRule(11); }
-    | FormalDecl COMMA FormalsList { printProductionRule(12); }
+    : FormalDecl {  }
+    | FormalDecl COMMA FormalsList {  }
     ;
 FormalDecl
-    : Type ID { printProductionRule(13); }
+    : Type ID { $$.type = $1.type; $$.name = $2.name; }
     ;
 
 Statements
-    : Statement { printProductionRule(14); }
-    | Statements Statement { printProductionRule(15); }
+    : Statement {  }
+    | Statements Statement {  }
     ;
 
 Statement
@@ -117,49 +117,59 @@ ExpList
     ;
 
 Type
-    : INT { $$.type = "int"; }
-    | BYTE { $$.type = "byte"; }
-    | BOOL { $$.type = "bool"; }
+    : INT { $$.type = $1.type; }
+    | BYTE { $$.type = $1.type; }
+    | BOOL { $$.type = $1.type; }
     ;
 
 Exp
     : LPAREN Exp RPAREN { printProductionRule(35); }
-    | Exp MD_BINOP Exp %prec MD_BINOP { if(Exp are not of type number) Error; $$.type=typeWithWidestRange)(/*addhere*/); }
-    | Exp PM_BINOP Exp %prec PM_BINOP { if(Exp are not of type number) Error; $$.type=typeWithWidestRange)(/*addhere*/); }
+    | Exp MD_BINOP Exp %prec MD_BINOP { if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = biggerType($1.type, $3.type); }
+    | Exp PM_BINOP Exp %prec PM_BINOP { if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = biggerType($1.type, $3.type); }
     | ID { printProductionRule(37); }
-    | Call { $$.type=$$.type; }
-    | NUM { $$.type="int"; }
-    | NUM B { $$.type="byte"; }
-    | STRING { $$.type="string"; }
-    | TRUE { $$.type="bool"; }
-    | FALSE { $$.type="bool"; }
-    | NOT Exp { if(Exp not of type bool) Error; $$.type="bool"; }
-    | Exp AND Exp { if(Exp not of type bool) Error;$$.type="bool"; }
-    | Exp OR Exp { if(Exp not of type bool) Error; }
-    | Exp EQ_RELOP Exp %prec EQ_RELOP {  if(Exp not numbers) error; $$.type="bool"; }
-    | Exp RE_RELOP Exp %prec RE_RELOP {  if(Exp not numbers) error; $$.type="bool"; }
-    | LPAREN Type RPAREN Exp { if(badExplicitConvert(/*add here*/)) Error;}; }
+    | Call { $<type>$=$<type>1; }
+    | NUM { $<type>$=$<type>1; }
+    | NUM B {if(byteTooLarge($<numVal>1) errorByteTooLarge(yylineno, $<strVal>1); $<type>$=$<type>1; }
+    | STRING { $<type>$=$<type>1; }
+    | TRUE { $<type>$=$<type>1; }
+    | FALSE { $<type>$=$<type>1; }
+    | NOT Exp { if(notBool($<type>2)) errorMismatch(yylineno); $<type>$=$<type>2; }
+    | Exp AND Exp { if(notBool($<type>1) || notBool($<type>3)) errorMismatch(yylineno); $<type>$=$<type>1; }
+    | Exp OR Exp { if(notBool($<type>1) || notBool($<type>3)) errorMismatch(yylineno); $<type>$=$<type>1; }
+    | Exp EQ_RELOP Exp %prec EQ_RELOP {  if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = "bool";}
+    | Exp RE_RELOP Exp %prec RE_RELOP {  if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = "bool";}
+    | LPAREN Type RPAREN Exp {if(notIntOrBool($<type>2,$<type>4)) errorMismatch(yylineno);$<type>$ = $<type>2;}
     ;
 
 %%
 void yyerror(const char* s ) { errorSyn(yylineno);}
 
-bool typesDontMatch(const char* LHS_type, const char* RHS_type)
+bool notBool(cosnt string type)
 {
-    if((strcmp(type1, type2) != 0)
-    && (!(strcmp(LHS_type, "int") == 0 && strcmp(RHS_type, "byte") == 0)))
+    if(type==string("bool")) return false;
+    return true;
+}
+
+bool byteTooLarge(int value)
+{
+    if(value > 255) return true;
+    return false;
+}
+bool typesDontMatch(const string LHS_type, const string RHS_type)
+{
+    if (type1!=type2 && (LHS_type != string("int") || RHS_type != string("byte"))
     {
         return true;
     }
     return false;
 }
 
-bool badExplicitConvert(const char* converter_type, const char* converted_type)
+bool notIntOrBool(const char* converter_type, const char* converted_type)
 {
-    if((converter_type=="int" && converted_type=="bool")
-         ||(converter_type=="bool" && converted_type=="int")
-         ||(converter_type=="int" && converted_type=="int")
-         ||(converter_type=="bool" && converted_type=="bool"))
+    if((converter_type==string("int") && converted_type==string("bool"))
+         ||(converter_type==string("bool") && converted_type==string("int"))
+         ||(converter_type==string("int") && converted_type==string("int"))
+         ||(converter_type==string("bool") && converted_type==string("bool")))
          {
             return false
          }
