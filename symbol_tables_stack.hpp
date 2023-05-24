@@ -14,25 +14,16 @@ class symbol_tables_stack{
         // offsets.push(0);
         stack<symbol_table*> tables;
         stack<int> offsets;
+        bool is_in_while = false;
         symbol_tables_stack(){
-            symbol_table *global_scope = Maketable(nullptr,true);
-            int zero = 0;
-            push(offsets, zero);
-            push(tables, global_scope); // init global scope
-            //1.do we want to init a global scope with te construction
-            //2. levi needs to undetrstands pop deletes the object!
-            // inWhile = false;
+            push_scope();
+            // 1.do we want to init a global scope with te construction
+            // 2. levi needs to undetrstands pop deletes the object!
+            //  inWhile = false;
         }//init tables and offset
-        static symbol_table* Maketable(symbol_table *parent,bool is_global)
+        void push_scope()
         {
-            return new symbol_table(is_global,parent);
-        }
-        template <class T>
-        void push(stack<T>& stack,T& object)
-        {
-            stack.push(object);
-            return;
-             /*symbol_table *parent = nullptr;
+            symbol_table *parent = nullptr;
             bool is_global = true;
             int offset = 0;
             if (!tables.empty())
@@ -47,22 +38,29 @@ class symbol_tables_stack{
                 assert(false);//bad allocation
             }
             this->tables.push(new_scope);
-            this->offsets.push(offset);*/
+            this->offsets.push(offset);
         }
-        void pop(){
-            //unless you want to make it super complicated, this stays this way!
+        void setInWhile(bool value)
+        {
+            tables.top()->set_is_in_while(value);
+        }
+        bool notInWhile()
+        {
+            return (tables.top()->get_in_while()==false);
+        }
+        void pop_scope(){
+            output::endScope();
+            this->tables.top()->printTable();
+            // unless you want to make it super complicated, this stays this way!
             symbol_table *top_table = this->tables.top();
             this->tables.pop();
             this->offsets.pop();
             delete top_table;
             return;
         }
-        template <class T>
-        T top(stack<T>& stack)
+        symbol_table* top_scope()
         {
-            //int var =  offsets.top();
-            //cout << &var << endl;
-            return stack.top();
+            return tables.top();
         }
         symbol_table* get_global_scope(){
             //returns the global_scope to find functions and global variables and such
@@ -79,9 +77,43 @@ class symbol_tables_stack{
             assert(!this->tables.empty());
             return (this->tables.top()->parent == nullptr);
         }
-        void insert(symbol_table* table, string name,string type,int offset,bool is_func, bool is_override,int yylineno)
+        bool NameExist(string name)
+        {
+            symbol_table *table=tables.top();
+            return table->contains(name);
+        }
+        void insert(symbol_table* table, string name,string type, bool is_func, bool is_override,int yylineno)
         {
             assert(table != nullptr);
-            table->insert(name, type, offset, is_func, is_override,yylineno);
+            if(is_override && !is_func){
+                assert(false);
+            }
+            if(!is_func)
+            {
+                if (table->contains(name) == false)
+                {   
+                int offset = this->offsets.top();
+                this->offsets.pop();
+                table->insert(name, type, offset, is_func, is_override);
+                this->offsets.push(offset+1);
+                }
+                else{
+                output::errorDef(yylineno,name);
+                }
+            }
+            else{
+                if(is_override)
+                {
+                // if we declare new override
+                // 1. make sure that if there is anotehr funcion(find it first), it is decalred also as override
+                // 2. if not ->error
+                // 3. else "override" it.
+                }
+                if(!is_override)
+                {
+                    //1.
+                }
+            }
+            
         }
 };

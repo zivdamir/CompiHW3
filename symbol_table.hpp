@@ -7,16 +7,25 @@
 #include "hw3_output.hpp"
 using namespace std;
 
-class symbol_table{
-    public:
-        symbol_table *parent;
-        vector<table_entry*> entries;
-        bool is_global_scope;
-        symbol_table(bool is_global_scope = false, symbol_table *parent = nullptr) : parent(parent),is_global_scope(is_global_scope)
+class symbol_table
+{
+public:
+    symbol_table *parent;
+    vector<table_entry *> entries;
+    //bool is_global_scope;
+    bool is_in_while = false;
+    symbol_table(bool is_global_scope = false, symbol_table *parent = nullptr) : parent(parent)
+    {
+        if(is_global_scope)
         {
+        table_entry* print_func_entry = new table_entry("print", 0, "STRING->VOID",true);
+        table_entry* printi_func_entry = new table_entry("printi", 0, "INT->VOID",true);
+        this->entries.push_back(print_func_entry);
+        this->entries.push_back(printi_func_entry);
         }
+    }
     //need to add Table~
-    void insert(string name,string type,int offset,bool is_func,bool is_override,int yylineno){
+    void insert(string name,string type,int offset,bool is_func,bool is_override){
        if (!this->is_global_scope)
        {
            if (is_func)
@@ -24,29 +33,23 @@ class symbol_table{
                assert(false);
            }
         }
-        if (!is_func)
+        if (!is_func||!is_override)
         {
-            if(contains_in_current_scope(name,type))
-            {
-                output::errorDef(yylineno,name);// maybe return error or something.
-            }
-            else{
                 table_entry *new_entry = new table_entry(name, offset, type);
                 if(!new_entry){
                     assert (false); //TODO
                 }
                 entries.push_back(new_entry);
-            }
         }
-
+        
         return;
     }
-    bool contains_in_current_scope(string name, string type){
+    bool contains_in_current_scope(string name){
         bool found = false;
         if (!entries.empty())
         {
             for (table_entry* entry: entries){
-                if(entry->name == name && entry->type == type){
+                if(entry->name == name ){
                     found = true;
                     break;
                 }
@@ -54,13 +57,13 @@ class symbol_table{
         }
         return found;
     }
-    bool contains(string name,string type)
+    bool contains(string name)
     {
         bool is_contains = false;
         symbol_table *curr_table = this;
         while(curr_table != nullptr )
         {
-            is_contains = curr_table->contains_in_current_scope(name, type);
+            is_contains = curr_table->contains_in_current_scope(name);
             if (is_contains)
             {
                 break;
@@ -68,5 +71,16 @@ class symbol_table{
             curr_table = curr_table->parent;
         }
         return is_contains; 
+    }
+    void printTable()
+    {
+        cout << "hello levi" << endl;
+    }
+    void set_is_in_while(bool val){
+        this->is_in_while = val;
+    }
+    bool get_in_while()
+    {
+        return this->is_in_while;
     }
 };
