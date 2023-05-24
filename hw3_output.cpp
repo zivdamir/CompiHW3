@@ -41,7 +41,6 @@ string output::makeFunctionType(const string& retType, std::vector<string>& argT
     res << typeListToString(argTypes) << "->" << retType;
     return res.str();
 }
-
 void output::errorLex(int lineno){
     cout << "line " << lineno << ":" << " lexical error" << endl;
 }
