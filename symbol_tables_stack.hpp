@@ -73,8 +73,9 @@ class symbol_tables_stack{
             assert(!this->tables.empty());
             return (this->tables.top()->parent == nullptr);
         }
-        void insert(string name,string type,bool is_func)
+        void insert(symbol_table* table, string name,string type,int offset,bool is_func)
         {
-            
+            assert(table != nullptr);
+            table->insert(name, type, offset, is_func);
         }
 };
