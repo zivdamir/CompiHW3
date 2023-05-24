@@ -2,12 +2,12 @@
 #include "table_entry.hpp"
 using namespace std;
 
-class Table{
+class symbol_table_entry{
     public:
-        Table *parent;
+        symbol_table_entry *parent;
         vector<table_entry*> entries;
         bool is_global_scope;
-        Table(bool is_global_scope = false, Table *parent = nullptr) : parent(parent),is_global_scope(is_global_scope)
+        symbol_table_entry(bool is_global_scope = false, symbol_table_entry *parent = nullptr) : parent(parent),is_global_scope(is_global_scope)
         {
         }
     //need to add Table~
