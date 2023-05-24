@@ -1,6 +1,5 @@
 //this class/struct remsembles an entry in symbol table.
 #include <string>
-#include <stack>
 #include "assert.h"
 
 using namespace std;
