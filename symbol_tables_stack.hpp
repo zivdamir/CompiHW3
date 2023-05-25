@@ -117,7 +117,7 @@ class symbol_tables_stack{
                 //make sure it is the global scope
                 if(!is_curr_scope_global())
                 {
-                    
+                    output::errorUndefFunc(yylineno, name);
                 }
                 }
             }
