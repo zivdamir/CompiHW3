@@ -101,7 +101,8 @@ class symbol_tables_stack{
                 output::errorDef(yylineno,name);
                 }
             }
-            else{
+            else{ //if is_func == true
+
                 if(is_override)
                 {
                 // if we declare new override
@@ -111,7 +112,13 @@ class symbol_tables_stack{
                 }
                 if(!is_override)
                 {
-                    //1.
+                // 1.normal insertion first, then we will add the condition of previous declaration of override.
+                //
+                //make sure it is the global scope
+                if(!is_curr_scope_global())
+                {
+                    
+                }
                 }
             }
             
