@@ -16,8 +16,9 @@ class table_entry
     string type;
     int offset;
     bool is_func; // perhaps could be deprecated
-    table_entry(string name, int offset, string type ,bool is_func = false)
-        : name(name), offset(offset), type(type),is_func(is_func) {
+    bool is_override;
+    table_entry(string name, int offset, string type ,bool is_func = false,bool is_override=false)
+        : name(name), offset(offset), type(type),is_func(is_func), is_override(is_override) {
         if(this->is_func)
         {
             assert(this->offset == 0);
@@ -44,4 +45,17 @@ class table_entry
         if(position == NO_RETURN_TYPE) return EMPTY_STRING;
         else return iterator.substr(0,position);
     }
+    bool isOverride()
+    {
+        return this->is_override;
+    }
+    string getType()
+    {
+        return this->type;
+    }
+    bool isFunc()
+    {
+        return is_func;
+    }
+
 };

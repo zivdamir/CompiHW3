@@ -82,9 +82,10 @@ class symbol_tables_stack{
             symbol_table *table=tables.top();
             return table->contains(name);
         }
-        void insert(symbol_table* table, string name,string type, bool is_func, bool is_override,int yylineno)
+        void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
-            assert(table != nullptr);
+            assert(this->top_scope() != nullptr);
+            symbol_table* table = this->top_scope();
             if(is_override && !is_func){
                 assert(false);
             }
@@ -102,25 +103,88 @@ class symbol_tables_stack{
                 }
             }
             else{ //if is_func == true
-
-                if(is_override)
-                {
-                // if we declare new override
-                // 1. make sure that if there is anotehr funcion(find it first), it is decalred also as override
-                // 2. if not ->error
-                // 3. else "override" it.
+                if(table->contains(name)){
+                    table_entry* identical_name_func_in_table = table->findByName(name);
+                    if (identical_name_func_in_table->isOverride()==false)
+                    {
+                        output::errorFuncNoOverride(yylineno, name);
+                    }
+                    else
+                    {
+                        if(!is_override)
+                        {
+                            output::errorOverrideWithoutDeclaration(yylineno, name);
+                        }
+                        else{
+                            table->insert(name, type, 0, is_func, is_override);
+                        }
+                    }
                 }
-                if(!is_override)
+                else
                 {
-                // 1.normal insertion first, then we will add the condition of previous declaration of override.
-                //
-                //make sure it is the global scope
-                if(!is_curr_scope_global())
-                {
-                    output::errorUndefFunc(yylineno, name);
-                }
+                    table->insert(name, type, 0, is_func, is_override);
                 }
             }
             
+        }
+        string getFuncReturnType(string name)
+        {
+            table_entry* func_entry = this->get_global_scope()->findByName(name);
+            return func_entry->get_return_type();
+        }
+        string getType(string name)
+        {
+            table_entry* var_entry = this->top_scope()->findByName(name);
+            return var_entry->getType();
+        }
+        bool nameExists(string name)
+        {
+            if(this->top_scope()->contains(name))
+            {
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+        bool isFunc(string name)
+        {
+            table_entry* var_entry = this->top_scope()->findByName(name);
+            return var_entry->isFunc();
+        }
+        bool inWhileLoop()
+        {
+            if(is_in_while) 
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        void updateInWhile(bool in_while)
+        {
+            this->is_in_while = in_while;
+        }
+        string getFunctionParamsTypes(string name)
+        {
+            table_entry* func_entry = this->findLastDefinedFunc(name);
+            return func_entry->get_function_parameters_types();
+
+        }
+        table_entry* findLastDefinedFunc(string name)
+        {
+            return this->get_global_scope()->getLastDefinedInScope(name);
+        }
+        string getCurrentfunctionreturnType(string name)
+        {
+            table_entry* last_func = this->findCurrentFunc();
+            assert(last_func);
+            return last_func->get_return_type();
+        }
+        table_entry* findCurrentFunc()
+        {
+            return this->get_global_scope()->getLastEntry();
         }
 };

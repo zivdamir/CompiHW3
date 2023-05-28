@@ -26,7 +26,7 @@ public:
     }
     //need to add Table~
     void insert(string name,string type,int offset,bool is_func,bool is_override){
-       if (!this->is_global_scope)
+       if (this->parent)
        {
            if (is_func)
            {
@@ -82,5 +82,57 @@ public:
     bool get_in_while()
     {
         return this->is_in_while;
+    }
+    table_entry* findByNameInScope(string name)
+    {
+        table_entry* found = nullptr;
+        if (!entries.empty())
+        {
+            for (table_entry* entry: entries){
+                if(entry->name == name){
+                    found = entry;
+                    break;
+                }
+            }
+        }
+        return found;
+    }
+    table_entry* findByName(string name)
+    {
+        table_entry* found = nullptr;
+        symbol_table *curr_table = this;
+        while(curr_table != nullptr )
+        {
+            found = curr_table->findByNameInScope(name);
+            if (found)
+            {
+                break;
+            }
+            curr_table = curr_table->parent;
+        }
+        return found;
+    }
+    table_entry* getLastDefinedInScope(string name)
+    {
+        table_entry* found = nullptr;
+        if (!entries.empty())
+        {
+            for (table_entry* entry: entries){
+                if(entry->name == name){
+                    found = entry;
+                }
+            }
+        }
+        return found;
+    }
+    table_entry* getLastEntry()
+    {
+        if(entries.empty())
+        {
+            return nullptr;
+        }
+        else{
+        return entries.back();
+        }
     }
 };

@@ -1,4 +1,7 @@
 %{
+    %union {
+        tokenAtt att;
+    }
     #include <iostream>
     #include <string>
     #include "hw3_output.hpp"
@@ -8,6 +11,21 @@
     int yylex();
     void yyerror(const char*);
     symbol_tables_stack stack = symbol_tables_stack();
+
+    void yyerror(const char* s ) { errorSyn(yylineno);}
+    bool notBool(cosnt string type);
+    bool byteTooLarge(int value);
+    bool typesDontMatch(const string LHS_type, const string RHS_type);
+    bool notIntOrBool(const string converter_type, const string converted_type);
+    bool isFunc(string type);
+    bool expList_not_valid(string func_name, string exp_list);
+
+
+
+
+
+
+
     
 %}
 %define parse.error verbose;
@@ -55,7 +73,7 @@
 Program
     : Funcs {
         if (yychar == YYEOF) {
-            Stack.validateMainFunction(); Stack.pop_scope();
+            stack.validateMainFunction();
         }
     }
     ;
@@ -67,14 +85,12 @@ Funcs
 
 FuncDecl
     : OverRide RetType ID LPAREN Formals
-    { Stack.insert($2.name,($4.type + string("->") + $1.type),false, true, $<intVal>1); 
-    Stack.push_scope();}
-    RPAREN LBRACE Statements RBRACE {SymbolTable.pop_scope();}
+    { stack.insert($2.name, ($4.type + string("->") + $1.type), true, $1.intVal, yylineno);}
+    RPAREN LBRACE {stack.push_scope();} Statements RBRACE {SymbolTable.pop_scope();}
     ;
 OverRide
-    :/*epsilon*/ {$<numVal>$ = false;}
- }
-    | OVERRIDE {$<numVal>$ = true;}
+    :/*epsilon*/ {$$.intVal = false;}
+    | OVERRIDE {$$.intVal = true;}
     ;
 
 RetType
@@ -83,14 +99,14 @@ RetType
     ;
 
 Formals
-    : /*epsilon*/ {$<type>$ = string(""); $<name>$ = string("");  }
-    |FormalsList {$<type>$ = $<type>1; $<name>$ = $<name>1;}
+    : /*epsilon*/ {$$.type = string(""); $$.name = string("");  }
+    |FormalsList {$$.type = $1.type; $$.name = $1.name;}
     ;
 
 FormalsList
-    : FormalDecl {$<type>$ = $<type>1; $<name>$ = $<name>1;}
-    | FormalDecl COMMA FormalsList {$$.type = $<type>1 + string(",") + $<type>3;
-                                    $$.name = $<name>1 + string(",") + $<name>3;}
+    : FormalDecl {$$.type = $1.type; $$.name = $1.name;}
+    | FormalDecl COMMA FormalsList {$$.type = $1.type + string(",") + $3.type;
+                                    $$.name = $1.name + string(",") + $3.name;}
     ;
 FormalDecl
     : Type ID { $$.type = $1.type ; $$.name = $2.name; }
@@ -102,31 +118,31 @@ Statements
     ;
 Statement 
     : LBRACE {stack.push_scope();} Statements RBRACE {stack.pop_scope();}
-    | Type ID SC { stack.insert($<name>2 , $<type>1, false, false, yylineno);}
-    | Type ID ASSIGN Exp SC {if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); stack.insert($<name>2 , $<type>1, false, false, yylineno); }
-    | ID ASSIGN { if(!stack.NameExists($<name>1) || stack.is_func($<name>1)) errorUndef(yylineno, $<name>1);}
-     Exp SC { if(!typesDontMatch(SymbolTable.get_type($1.name), $4.type)) errorMismatch(yylineno); }
+    | Type ID SC { stack.insert($2.name , $1.type, false, false, yylineno);}
+    | Type ID ASSIGN Exp SC {if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); stack.insert($2.name , $1.type, false, false, yylineno); }
+    | ID ASSIGN { if(!stack.nameExists($1.name) || stack.isFunc($1.name)) errorUndef(yylineno, $1.name);}
+     Exp SC { if(!typesDontMatch(SymbolTable.getType($1.name), $4.type)) errorMismatch(yylineno); }
     | Call SC { /*empty*/ }
     | RETURN SC { if(!voidFunc()) errorMismatch(yylineno); }
     | RETURN Exp SC { if(voidFunc()) errorMismatch(yylineno); }
-    | IF LPAREN Exp M RPAREN Statement {if(notBool($<type>3)) errorMismatch;  }
-    | IF LPAREN Exp M RPAREN Statement ELSE Statement { if(notBool($<type>3)) errorMismatch; }
-    | WHILE {stack.InsetInWhile(true);} LPAREN Exp RPAREN Statement {if(notBool($<type>3)) errorMismatch; stack.InsetInWhile(false);}
-    | BREAK SC { if(stack.notInWhile()) errorUnexpectedBreak();}
-    | CONTINUE SC { if(stack.notInWhileLoop()) errorUnexpectedContinue();}
+    | IF LPAREN Exp RPAREN Statement {if(notBool($3.type)) errorMismatch(yylineno);  }
+    | IF LPAREN Exp RPAREN Statement ELSE Statement { if(notBool($3.type)) errorMismatch(yylineno); }
+    | WHILE {stack.updateInWhile(true);} LPAREN Exp RPAREN Statement {if(notBool($3.type)) errorMismatch; stack.updateInWhile(false);}
+    | BREAK SC { if(!stack.inWhileLoop()) errorUnexpectedBreak();}
+    | CONTINUE SC { if(!stack.inWhileLoop()) errorUnexpectedContinue();}
     ;
 
 Call
     : ID LPAREN ExpList RPAREN { if(ExpList_not_valid()) errorPrototypeMismatch(); 
-    if(!stack.NameExists($<name>1) || !stack.is_func($<name>1)) errorUndefFunc(yylineno, $<name>1);
+    if(!stack.nameExists($1.name) || !stack.isFunc($1.name)) errorUndefFunc(yylineno, $1.name);
     $$.name = $1.name; 
-    $$.type = Stack.get_func_return_type($1.name);
+    $$.type = Stack.getFuncReturnType($1.name);
     }
     | ID LPAREN RPAREN { 
     if(ExpList_not_valid()) errorPrototypeMismatch(); 
-    if(!stack.NameExists($<name>1) || !stack.is_func($<name>1)) errorUndefFunc(yylineno, $<name>1);
+    if(!stack.nameExists($1.name) || !stack.isFunc($1.name)) errorUndefFunc(yylineno, $1.name);
     $$.name = $1.name; 
-    $$.type = Stack.get_func_return_type($1.name);
+    $$.type = Stack.getFuncReturnType($1.name);
     }
     ;
     
@@ -142,22 +158,22 @@ Type
     ;
 
 Exp
-    : LPAREN Exp RPAREN {$<type>$ = $<type>2;}
-    | Exp MD_BINOP Exp %prec MD_BINOP { if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = biggerType($1.type, $3.type); }
-    | Exp PM_BINOP Exp %prec PM_BINOP { if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = biggerType($1.type, $3.type); }
-    | ID {/*if(!stack.NameExists($<name>1) || isFunc($<type>1)) errorUndef(yylineno, $1.name); $<type>$ = $<type>1; */}
-    | Call { $<type>$=$<type>1; }
-    | NUM { $<type>$=$<type>1; }
-    | NUM B {if(byteTooLarge($<numVal>1) errorByteTooLarge(yylineno, $<strVal>1); $<type>$=$<type>1; }
-    | STRING { $<type>$=$<type>1; }
-    | TRUE { $<type>$=$<type>1; }
-    | FALSE { $<type>$=$<type>1; }
-    | NOT Exp { if(notBool($<type>2)) errorMismatch(yylineno); $<type>$=$<type>2; }
-    | Exp AND Exp { if(notBool($<type>1) || notBool($<type>3)) errorMismatch(yylineno); $<type>$=$<type>1; }
-    | Exp OR Exp { if(notBool($<type>1) || notBool($<type>3)) errorMismatch(yylineno); $<type>$=$<type>1; }
-    | Exp EQ_RELOP Exp %prec EQ_RELOP {  if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = "bool";}
-    | Exp RE_RELOP Exp %prec RE_RELOP {  if(notIntOrBool($<type>1,$<type>3)) errorMismatch(yylineno); $<type>$ = "bool";}
-    | LPAREN Type RPAREN Exp {if(notIntOrBool($<type>2,$<type>4)) errorMismatch(yylineno);$<type>$ = $<type>2;}
+    : LPAREN Exp RPAREN {$$.type = $2.type;}
+    | Exp MD_BINOP Exp %prec MD_BINOP { if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
+    | Exp PM_BINOP Exp %prec PM_BINOP { if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
+    | ID {if(!stack.NameExists($1.name) || isFunc($1.type)) errorUndef(yylineno, $1.name); $$.type = $1.type; */}
+    | Call { $$.type=$1.type; }
+    | NUM { $$.type=$1.type; }
+    | NUM B {if(byteTooLarge($1.intVal) errorByteTooLarge(yylineno, $1.strVal); $$.type=$1.type; }
+    | STRING { $$.type=$1.type; }
+    | TRUE { $$.type=$1.type; }
+    | FALSE { $$.type=$1.type; }
+    | NOT Exp { if(notBool($2.type)) errorMismatch(yylineno); $$.type=$2.type; }
+    | Exp AND Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
+    | Exp OR Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
+    | Exp EQ_RELOP Exp %prec EQ_RELOP {  if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
+    | Exp RE_RELOP Exp %prec RE_RELOP {  if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
+    | LPAREN Type RPAREN Exp {if(notIntOrBool($2.type,$4.type)) errorMismatch(yylineno);$$.type = $2.type;}
     ;
 
 %%
@@ -183,7 +199,7 @@ bool typesDontMatch(const string LHS_type, const string RHS_type)
     return false;
 }
 
-bool notIntOrBool(const char* converter_type, const char* converted_type)
+bool notIntOrBool(const string converter_type, const string converted_type)
 {
     if((converter_type==string("int") && converted_type==string("bool"))
          ||(converter_type==string("bool") && converted_type==string("int"))
@@ -203,6 +219,29 @@ bool isFunc(string type)
     }
     return false;
 }
+
+bool expList_not_valid(string func_name, string exp_list)
+{
+    td::vector<std::string> param_vec;
+    const char* params = stack.getFunctionParamTypes().c_str();
+    if(params!=expList)
+            errorPrototypeMismatch(yylineno, funcName, param_vec);
+    }
+    if(error) errorPrototypeMismatch(yylineno, funcName, param_vec);
+}
+
+bool isVoid()
+{
+    const string func_ret_type = stack.getCurrentFucntionReturnType();
+    if(func_ret_type == string("void"))
+    {
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 
 int main()
 {
