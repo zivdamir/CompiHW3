@@ -53,20 +53,28 @@
 
 %%
 Program
-    : Funcs {}
+    : Funcs {
+        if (yychar == YYEOF) {
+            Stack.validateMainFunction(); Stack.pop_scope();
+        }
+    }
     ;
 
 Funcs
-    : FuncDecl Funcs {    }
-    |/*epsilon*/ {   }
+    : FuncDecl Funcs {/*empty*/}
+    |/*epsilon*/ {/*empty*/}
     ;
 
 FuncDecl
-    : OverRide RetType ID LPAREN Formals RPAREN LBRACE {stack.pop();} Statements RBRACE {pop_table();}
+    : OverRide RetType ID LPAREN Formals
+    { Stack.insert($2.name,($4.type + string("->") + $1.type),false, true, $<intVal>1); 
+    Stack.push_scope();}
+    RPAREN LBRACE Statements RBRACE {SymbolTable.pop_scope();}
     ;
 OverRide
-    :/*epsilon*/ { }
-    | OVERRIDE { }
+    :/*epsilon*/ {$<numVal>$ = false;}
+ }
+    | OVERRIDE {$<numVal>$ = true;}
     ;
 
 RetType
@@ -75,46 +83,56 @@ RetType
     ;
 
 Formals
-    : /*epsilon*/ {  }
-    |FormalsList {  }
+    : /*epsilon*/ {$<type>$ = string(""); $<name>$ = string("");  }
+    |FormalsList {$<type>$ = $<type>1; $<name>$ = $<name>1;}
     ;
 
 FormalsList
-    : FormalDecl {$$.type = $1.type; $$.name = $2.name;}
-    | FormalDecl COMMA FormalsList {  }
+    : FormalDecl {$<type>$ = $<type>1; $<name>$ = $<name>1;}
+    | FormalDecl COMMA FormalsList {$$.type = $<type>1 + string(",") + $<type>3;
+                                    $$.name = $<name>1 + string(",") + $<name>3;}
     ;
 FormalDecl
-    : Type ID { $$.type = $1.type; $$.name = $2.name; }
+    : Type ID { $$.type = $1.type ; $$.name = $2.name; }
     ;
 
 Statements
     : Statement {/*empty*/}
     | Statements Statement {/*empty*/}
     ;
-x = 5;
 Statement 
-    : LBRACE {push_table();} Statements RBRACE {stack.pop();}
+    : LBRACE {stack.push_scope();} Statements RBRACE {stack.pop_scope();}
     | Type ID SC { stack.insert($<name>2 , $<type>1, false, false, yylineno);}
-    | Type ID ASSIGN Exp SC { stack.insert($<name>2 , $<type>1, false, false, yylineno); if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); ; }
-    | ID ASSIGN Exp SC { if(!stack.NameExists($<name>1)) errorUndef(yylineno, $<name>1); if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); }
-    | Call SC { printProductionRule(20); }
-    | RETURN SC { if(!voidFunc()) error; }
-    | RETURN Exp SC { if(voidFunc()) error; }
-    | IF LPAREN Exp RPAREN Statement {if(notBool($<type>3)) errorMismatch;  }
-    | IF LPAREN Exp RPAREN Statement ELSE Statement { if(notBool($<type>3)) errorMismatch; }
-    | WHILE {stack.InsetInWhile(true);} LPAREN Exp RPAREN Statement {stack.InsetInWhile(falsee);}
+    | Type ID ASSIGN Exp SC {if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); stack.insert($<name>2 , $<type>1, false, false, yylineno); }
+    | ID ASSIGN { if(!stack.NameExists($<name>1) || stack.is_func($<name>1)) errorUndef(yylineno, $<name>1);}
+     Exp SC { if(!typesDontMatch(SymbolTable.get_type($1.name), $4.type)) errorMismatch(yylineno); }
+    | Call SC { /*empty*/ }
+    | RETURN SC { if(!voidFunc()) errorMismatch(yylineno); }
+    | RETURN Exp SC { if(voidFunc()) errorMismatch(yylineno); }
+    | IF LPAREN Exp M RPAREN Statement {if(notBool($<type>3)) errorMismatch;  }
+    | IF LPAREN Exp M RPAREN Statement ELSE Statement { if(notBool($<type>3)) errorMismatch; }
+    | WHILE {stack.InsetInWhile(true);} LPAREN Exp RPAREN Statement {if(notBool($<type>3)) errorMismatch; stack.InsetInWhile(false);}
     | BREAK SC { if(stack.notInWhile()) errorUnexpectedBreak();}
     | CONTINUE SC { if(stack.notInWhileLoop()) errorUnexpectedContinue();}
     ;
 
 Call
-    : ID LPAREN ExpList RPAREN { printProductionRule(28); }
-    | ID LPAREN RPAREN { printProductionRule(29); }
+    : ID LPAREN ExpList RPAREN { if(ExpList_not_valid()) errorPrototypeMismatch(); 
+    if(!stack.NameExists($<name>1) || !stack.is_func($<name>1)) errorUndefFunc(yylineno, $<name>1);
+    $$.name = $1.name; 
+    $$.type = Stack.get_func_return_type($1.name);
+    }
+    | ID LPAREN RPAREN { 
+    if(ExpList_not_valid()) errorPrototypeMismatch(); 
+    if(!stack.NameExists($<name>1) || !stack.is_func($<name>1)) errorUndefFunc(yylineno, $<name>1);
+    $$.name = $1.name; 
+    $$.type = Stack.get_func_return_type($1.name);
+    }
     ;
-
+    
 ExpList
-    : Exp { printProductionRule(30); }
-    | Exp COMMA ExpList { printProductionRule(31); }
+    : Exp {  $$.type = $1.type; }
+    | Exp COMMA ExpList { $$.type = $1.type + string(",") + $3.type; }
     ;
 
 Type

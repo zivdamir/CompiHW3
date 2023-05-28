@@ -33,7 +33,7 @@ int                                                                             
 byte                                                                                {add_type_att("byte"); return BYTE;}
 b                                                                                   {add_type_att("byte"); return B;}
 bool                                                                                {add_type_att("bool"); return BOOL;}
-override                                                                            return OVERRIDE;
+override                                                                            {return OVERRIDE;}
 and                                                                                 return AND;
 or                                                                                  return OR;
 not                                                                                 return NOT;
