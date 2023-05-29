@@ -25,24 +25,11 @@ public:
         }
     }
     //need to add Table~
-    void insert(string name,string type,int offset,bool is_func,bool is_override){
-       if (this->parent)
-       {
-           if (is_func)
-           {
-               assert(false);
-           }
-        }
-        if (!is_func||!is_override)
-        {
+    void insert(string name,string type,int offset){
+       
                 table_entry *new_entry = new table_entry(name, offset, type);
-                if(!new_entry){
-                    assert (false); //TODO
-                }
                 entries.push_back(new_entry);
-        }
-        
-        return;
+                
     }
     bool contains_in_current_scope(string name){
         bool found = false;
