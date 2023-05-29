@@ -77,11 +77,6 @@ class symbol_tables_stack{
             assert(!this->tables.empty());
             return (this->tables.top()->parent == nullptr);
         }
-        bool NameExist(string name)
-        {
-            symbol_table *table=tables.top();
-            return table->contains(name);
-        }
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
             assert(this->top_scope() != nullptr);
@@ -139,13 +134,7 @@ class symbol_tables_stack{
         }
         bool nameExists(string name)
         {
-            if(this->top_scope()->contains(name))
-            {
-                return true;
-            }
-            else{
-                return false;
-            }
+            return this->top_scope()->contains(name);
         }
         bool isFunc(string name)
         {
@@ -167,15 +156,22 @@ class symbol_tables_stack{
         {
             this->is_in_while = in_while;
         }
-        string getFunctionParamsTypes(string name)
-        {
-            table_entry* func_entry = this->findLastDefinedFunc(name);
-            return func_entry->get_function_parameters_types();
-
-        }
+        
         table_entry* findLastDefinedFunc(string name)
         {
             return this->get_global_scope()->getLastDefinedInScope(name);
+        }
+        table_entry* findCurrentFunc()
+        {
+            return this->get_global_scope()->getLastEntry();
+        }
+        
+        
+        /**these functions assume the function does exist**/
+        string getFunctionreturnType(string name)
+        {
+            table_entry* func_entry = this->findLastDefinedFunc(name);
+            return func_entry->get_return_type();
         }
         string getCurrentfunctionreturnType(string name)
         {
@@ -183,8 +179,21 @@ class symbol_tables_stack{
             assert(last_func);
             return last_func->get_return_type();
         }
-        table_entry* findCurrentFunc()
+        string getFunctionParamsTypes(string name)
         {
-            return this->get_global_scope()->getLastEntry();
+            table_entry* func_entry = this->findLastDefinedFunc(name);
+            return func_entry->get_function_parameters_types();
+
+        }
+
+        void validateMainFunction()
+        {
+        table_entry* main_func = this->findLastDefinedFunc(string("main"));
+
+        if(main_func == nullptr
+         || (getFunctionParamsTypes("main")!= "")
+        || get_function_return_type("main").c_str(), "VOID") != 0)
+            output::errorMainMissing();
+    
         }
 };
