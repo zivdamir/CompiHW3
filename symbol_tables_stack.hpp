@@ -122,11 +122,7 @@ class symbol_tables_stack{
             }
             
         }
-        string getFuncReturnType(string name)
-        {
-            table_entry* func_entry = this->get_global_scope()->findByName(name);
-            return func_entry->get_return_type();
-        }
+        
         string getType(string name)
         {
             table_entry* var_entry = this->top_scope()->findByName(name);
@@ -183,17 +179,23 @@ class symbol_tables_stack{
         {
             table_entry* func_entry = this->findLastDefinedFunc(name);
             return func_entry->get_function_parameters_types();
-
+        }
+        string getFuncReturnType(string name)
+        {
+            table_entry* func_entry = this->get_global_scope()->findByName(name);
+            return func_entry->get_return_type();
         }
 
         void validateMainFunction()
         {
-        table_entry* main_func = this->findLastDefinedFunc(string("main"));
+            string name = string("main");
+            table_entry* main_func = this->findLastDefinedFunc(name);
 
-        if(main_func == nullptr
-         || (getFunctionParamsTypes("main")!= "")
-        || get_function_return_type("main").c_str(), "VOID") != 0)
-            output::errorMainMissing();
-    
+            if(main_func == nullptr 
+            || (getFunctionParamsTypes(name)!= string(""))
+            || getFuncReturnType(name) != ("VOID"))
+            {
+                output::errorMainMissing();
+            }
         }
 };
