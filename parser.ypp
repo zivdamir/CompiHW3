@@ -1,7 +1,5 @@
 %{
-    %union {
-        tokenAtt att;
-    }
+    
     #include <iostream>
     #include <string>
     #include "hw3_output.hpp"

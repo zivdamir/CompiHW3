@@ -11,8 +11,6 @@ void add_strVal_att(char* stVal);
 void add_intVal_att(int numVal);
 void add_type_att(char* type);
 
-add_name_att(char* name);add_value_att(int value);add_type_att(char* type);
-
 %}
 
 %option yylineno
