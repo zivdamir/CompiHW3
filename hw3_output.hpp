@@ -7,12 +7,10 @@ using namespace std;
 
 typedef struct token_att {
     int intVal;
-    string strVal;
-    string type;
-    string name;
+    char* strVal;
+    char* type;
+    char* name;
     } tokenAtt;
-
-
 #define YYSTYPE tokenAtt
 
 namespace output{

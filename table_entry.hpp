@@ -4,7 +4,7 @@
 //this class/struct remsembles an entry in symbol table.
 #include <string>
 #include "assert.h"
-
+#include "hw3_output.hpp"
 using namespace std;
 #define NO_RETURN_TYPE 0
 #define EMPTY_STRING ""

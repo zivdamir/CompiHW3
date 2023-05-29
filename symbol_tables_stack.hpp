@@ -2,9 +2,10 @@
 #define COMPIHW3symbol_table_stack__
 #endif
 #include "symbol_table.hpp"
+
 #include <stack>
 #include <iostream>
-using namespace std;
+#include <sstream>
 
 class symbol_tables_stack{
     public:
@@ -122,7 +123,7 @@ class symbol_tables_stack{
             }
             
         }
-         void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
+ /*       void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
     {
         std::stringstream param_names_stream(param_names);
         std::stringstream param_types_stream(type);
@@ -145,7 +146,7 @@ class symbol_tables_stack{
             tables.top()->TableAddEntry(names_vec.at(i), -i - 1, types_vec.at(i));
         }
         
-    }
+    }*/
         
         string getType(string name)
         {
@@ -193,7 +194,7 @@ class symbol_tables_stack{
             table_entry* func_entry = this->findLastDefinedFunc(name);
             return func_entry->get_return_type();
         }
-        string getCurrentfunctionreturnType(string name)
+        string getCurrentfunctionreturnType()
         {
             table_entry* last_func = this->findCurrentFunc();
             assert(last_func);
@@ -212,7 +213,7 @@ class symbol_tables_stack{
 
             if(main_func == nullptr 
             || (getFunctionParamsTypes(name)!= string(""))
-            || getFuncReturnType(name) != ("VOID"))
+            || getFunctionreturnType(name) != ("VOID"))
             {
                 output::errorMainMissing();
             }

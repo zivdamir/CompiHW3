@@ -1,15 +1,18 @@
 %{
+    
 
 /* Declarations section */
 #include <stdio.h>
+#include <string>
 #include "hw3_output.hpp"
 #include "tokens.hpp"
 #include "parser.tab.hpp"
-
+using namespace std;
 void add_name_att(char* name);
 void add_strVal_att(char* stVal);
-void add_intVal_att(int numVal);
+void add_intVal_att(int intVal);
 void add_type_att(char* type);
+
 
 %}
 
@@ -55,8 +58,8 @@ continue                                                                        
 {md_binop}                                                                          return MD_BINOP;
 {pm_binop}                                                                          return PM_BINOP;
 {id}                                                                                {add_name_att(yytext);return ID;}                                                                      
-{num}                                                                               {add_type_att("int");add_numVal_att(atoi(yytext));add_strVal_att(yytext); return NUM;}    
-{string}                                                                            {add_type_att("string");add_strVal_att(yytext);return STRING;}
+{num}                                                                               {add_type_att("int");add_intVal_att(atoi(yytext));add_strVal_att(yytext); return NUM;}    
+{string}                                                                            {add_type_att("string");add_strVal_att(yytext); return STRING;}
 {whitespace}*                                                                       ;
 {comment}                                                                           ;
 .                                                                                   {output::errorLex(yylineno);exit(0);}
@@ -64,17 +67,39 @@ continue                                                                        
 
 void add_name_att(char* name)
 {
-    yylval.name = string(name);
+    if(name != nullptr)
+    {
+        yylval.name = (char*) malloc(sizeof(char)*(strlen(name)+1));
+        strcpy(yylval.name, name);
+    }
+    else
+        yylval.name = nullptr;
 }
 void add_strVal_att(char* strVal)
 {
-    yylval.strVal = string(strVal);
+    if(strVal != nullptr)
+    {
+        yylval.strVal = (char*) malloc(sizeof(char)*(strlen(strVal)+1));
+        strcpy( yylval.strVal, strVal);
+    }
+    else
+        yylval.strVal = nullptr;
 }
-void add_numVal_att(int numVal)
+void add_intVal_att(int intVal)
 {
-    yylval.numVal = numVal;
+    yylval.intVal = intVal;
 }
 void add_type_att(char* type)
 {
-    yylval.type = string(type);
+    if(type != nullptr)
+    {
+        yylval.type = (char*) malloc(sizeof(char)*(strlen(type)+1));
+        strcpy( yylval.type, type);
+    }
+    else
+        yylval.type = nullptr;
 }
+
+
+
+    

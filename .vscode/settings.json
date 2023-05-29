@@ -1,5 +1,6 @@
 {
     "files.associations": {
+<<<<<<< Updated upstream
         "ostream": "cpp",
         "iostream": "cpp",
         "*.tcc": "cpp",
@@ -8,5 +9,8 @@
         "unordered_map": "cpp",
         "vector": "cpp",
         "new": "cpp"
+=======
+        "string": "cpp"
+>>>>>>> Stashed changes
     }
 }

@@ -4,8 +4,8 @@
 #include <vector>
 #include <iostream>
 #include "table_entry.hpp"
-#include "hw3_output.hpp"
-using namespace std;
+
+//using namespace std;
 
 class symbol_table
 {
