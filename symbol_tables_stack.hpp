@@ -90,7 +90,7 @@ class symbol_tables_stack{
                 {   
                 int offset = this->offsets.top();
                 this->offsets.pop();
-                table->insert(name, type, offset, is_func, is_override);
+                table->insert(name, type, offset);
                 this->offsets.push(offset+1);
                 }
                 else{
@@ -111,17 +111,41 @@ class symbol_tables_stack{
                             output::errorOverrideWithoutDeclaration(yylineno, name);
                         }
                         else{
-                            table->insert(name, type, 0, is_func, is_override);
+                            table->insert(name, type, 0);
                         }
                     }
                 }
                 else
                 {
-                    table->insert(name, type, 0, is_func, is_override);
+                    table->insert(name, type, 0);
                 }
             }
             
         }
+         void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
+    {
+        std::stringstream param_names_stream(param_names);
+        std::stringstream param_types_stream(type);
+        std::string segment;
+        std::vector<std::string> names_vec;
+        std::vector<std::string> types_vec;
+
+        while(std::getline(param_names_stream, segment, ','))
+        {
+            names_vec.push_back(segment);
+        }
+        while(std::getline(param_types_stream, segment, ','))
+        {
+            types_vec.push_back(segment);
+        }
+        int len = names_vec.size();
+        for(int i = 0; i < len; i++)
+        {
+            if(this->findByName(names_vec.at(i))) output::errorDef(yylineno, names_vec.at(i));
+            tables.top()->TableAddEntry(names_vec.at(i), -i - 1, types_vec.at(i));
+        }
+        
+    }
         
         string getType(string name)
         {
@@ -152,7 +176,7 @@ class symbol_tables_stack{
         {
             this->is_in_while = in_while;
         }
-        
+
         table_entry* findLastDefinedFunc(string name)
         {
             return this->get_global_scope()->getLastDefinedInScope(name);
@@ -179,11 +203,6 @@ class symbol_tables_stack{
         {
             table_entry* func_entry = this->findLastDefinedFunc(name);
             return func_entry->get_function_parameters_types();
-        }
-        string getFuncReturnType(string name)
-        {
-            table_entry* func_entry = this->get_global_scope()->findByName(name);
-            return func_entry->get_return_type();
         }
 
         void validateMainFunction()
