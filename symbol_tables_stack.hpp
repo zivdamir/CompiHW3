@@ -122,7 +122,6 @@ class symbol_tables_stack{
             }
             
         }
-<<<<<<< HEAD
          void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
     {
         std::stringstream param_names_stream(param_names);
@@ -152,9 +151,7 @@ class symbol_tables_stack{
             table_entry* func_entry = this->get_global_scope()->findByName(name);
             return func_entry->get_return_type();
         }
-=======
         
->>>>>>> 82ca4ee2cc9fa81b3016b00767f099470e458af2
         string getType(string name)
         {
             table_entry* var_entry = this->top_scope()->findByName(name);
@@ -184,7 +181,7 @@ class symbol_tables_stack{
         {
             this->is_in_while = in_while;
         }
-        
+
         table_entry* findLastDefinedFunc(string name)
         {
             return this->get_global_scope()->getLastDefinedInScope(name);
@@ -211,11 +208,6 @@ class symbol_tables_stack{
         {
             table_entry* func_entry = this->findLastDefinedFunc(name);
             return func_entry->get_function_parameters_types();
-        }
-        string getFuncReturnType(string name)
-        {
-            table_entry* func_entry = this->get_global_scope()->findByName(name);
-            return func_entry->get_return_type();
         }
 
         void validateMainFunction()
