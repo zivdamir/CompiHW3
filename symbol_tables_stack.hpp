@@ -146,11 +146,6 @@ class symbol_tables_stack{
         }
         
     }
-        string getFuncReturnType(string name)
-        {
-            table_entry* func_entry = this->get_global_scope()->findByName(name);
-            return func_entry->get_return_type();
-        }
         
         string getType(string name)
         {
