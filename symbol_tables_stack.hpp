@@ -80,6 +80,7 @@ class symbol_tables_stack{
         }
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
+            printf("insert begining\n");
             assert(this->top_scope() != nullptr);
             symbol_table* table = this->top_scope();
             if(is_override && !is_func){
@@ -121,7 +122,7 @@ class symbol_tables_stack{
                     table->insert(name, type, 0);
                 }
             }
-            
+            printf("insert end\n"); 
         }
  /*       void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
     {

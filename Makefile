@@ -1,15 +1,12 @@
 .PHONY: all clean
-C = /home/zivdamir/compihw3/CompiHW3
 all: clean
 	flex scanner.lex
 	bison  -d parser.ypp
-	g++ -std=c++17 -o hw3 *.c *.cpp
+	g++ -std=c++17 *.c *.cpp -o final.out
 clean:
 	rm -f lex.yy.c
 	rm -f parser.tab.*pp
-	rm -f hw3
-test:
-	g++ -std=c++17 table_entry.hpp hw3_output.cpp symbol_table.hpp symbol_tables_stack.hpp main.cpp -o prog
+	rm -f final.out
 	
 	
 	

@@ -71,10 +71,13 @@
 
 %%
 Program
-    : Funcs {
+    : {        printf("Program->Func before func\n");}Funcs {
+        printf("Program->Func before validateMainFunction\n");
         if (yychar == YYEOF) {
             _stack.validateMainFunction();
         }
+        printf("Program->Func after validateMainFunction\n");
+
     }
     ;
 
@@ -85,7 +88,7 @@ Funcs
 
 FuncDecl
     : OverRide RetType ID LPAREN Formals
-    { _stack.insert($2.name, join(join($4.type ,"->"),$1.type), true, $1.intVal, yylineno);}
+    { _stack.insert(string($2.type), string(join(join($5.type ,"->"),$2.type)), true, $1.intVal, yylineno);}
     RPAREN LBRACE {_stack.push_scope();} Statements RBRACE {_stack.pop_scope();}
     ;
 OverRide
@@ -179,11 +182,14 @@ Exp
 %%
 char* join(char* s1, char* s2)
 {
+    printf("in join\n");
     int str_len=strlen(s1)+strlen(s2);
     char* joined_str = (char*)malloc(sizeof(char)*(str_len+1));
     strcpy(joined_str,s1);
     strcat(joined_str,s2);
     //not freeing memory, might be a problem atm.
+    printf("joined finished \n");
+    printf("joined_str: %s\n",joined_str);
     return joined_str;
 }
 

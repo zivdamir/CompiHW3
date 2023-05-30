@@ -28,7 +28,9 @@ public:
     void insert(string name,string type,int offset){
        
                 table_entry *new_entry = new table_entry(name, offset, type);
+                printf("in insert before push back\n");
                 entries.push_back(new_entry);
+                printf("in insert after push back\n");
                 
     }
     bool contains_in_current_scope(string name){
