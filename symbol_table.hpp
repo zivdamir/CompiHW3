@@ -18,8 +18,8 @@ public:
     {
         if(is_global_scope)
         {
-        table_entry* print_func_entry = new table_entry("print", 0, "STRING->VOID",true);
-        table_entry* printi_func_entry = new table_entry("printi", 0, "INT->VOID",true);
+        table_entry* print_func_entry = new table_entry("print", 0, "string->void",true);
+        table_entry* printi_func_entry = new table_entry("printi", 0, "int->void",true);
         this->entries.push_back(print_func_entry);
         this->entries.push_back(printi_func_entry);
         }
@@ -28,9 +28,9 @@ public:
     void insert(string name,string type,int offset){
        
                 table_entry *new_entry = new table_entry(name, offset, type);
-                printf("in insert before push back\n");
+                printf("in insert before push back: %s\n", name.data());
                 entries.push_back(new_entry);
-                printf("in insert after push back\n");
+                printf("in insert after push back: %s\n", name.data());
                 
     }
     bool contains_in_current_scope(string name){
@@ -63,7 +63,7 @@ public:
     }
     void printTable()
     {
-        cout << "hello levi" << endl;
+        cout << "replacement for printTable which needs to be implemented, symbol_table.hpp" << endl;
     }
     void set_is_in_while(bool val){
         this->is_in_while = val;

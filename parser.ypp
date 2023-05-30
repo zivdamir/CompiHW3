@@ -15,7 +15,7 @@
     bool notBool( char* type);
     bool byteTooLarge(int value);
     bool typesDontMatch( char* LHS_type,  char* RHS_type);
-    bool notIntOrBool( char* converter_type,  char* converted_type);
+    bool notIntOrByte( char* converter_type,  char* converted_type);
     bool isFunc(char* type);
     bool expList_not_valid(string func_name, string exp_list);
     bool isVoid();
@@ -71,12 +71,12 @@
 
 %%
 Program
-    : {        printf("Program->Func before func\n");}Funcs {
-        printf("Program->Func before validateMainFunction\n");
+    : Funcs {
+       // printf("Program->Func before validateMainFunction\n");
         if (yychar == YYEOF) {
             _stack.validateMainFunction();
         }
-        printf("Program->Func after validateMainFunction\n");
+        //printf("Program->Func after validateMainFunction\n");
 
     }
     ;
@@ -88,8 +88,11 @@ Funcs
 
 FuncDecl
     : OverRide RetType ID LPAREN Formals
-    { _stack.insert(string($2.type), string(join(join($5.type ,"->"),$2.type)), true, $1.intVal, yylineno);}
-    RPAREN LBRACE {_stack.push_scope();} Statements RBRACE {_stack.pop_scope();}
+    { _stack.insert(string($3.name), string(join(join($5.type ,"->"),$2.type)), true, $1.intVal, yylineno);}
+    RPAREN LBRACE 
+    {_stack.push_scope();_stack.symbol_table_add_function_parameter_entries($5.name, $5.type, yylineno);} 
+    Statements RBRACE 
+    {_stack.pop_scope();}
     ;
 OverRide
     :/*epsilon*/ {$$.intVal = false;}
@@ -122,9 +125,9 @@ Statements
 Statement 
     : LBRACE {_stack.push_scope();} Statements RBRACE {_stack.pop_scope();}
     | Type ID SC { _stack.insert($2.name , $1.type, false, false, yylineno);}
-    | Type ID ASSIGN Exp SC {if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); _stack.insert($2.name , $1.type, false, false, yylineno); }
+    | Type ID ASSIGN Exp SC {/*printf("types dont match: $1.type: %s $4.type: %s\n", $1.type, $4.type); */ if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); _stack.insert($2.name , $1.type, false, false, yylineno); }
     | ID ASSIGN { if(!_stack.nameExists($1.name) || _stack.isFunc($1.name)) errorUndef(yylineno, $1.name);}
-     Exp SC { if(!typesDontMatch(_stack.getType($1.name).data(), $4.type)) errorMismatch(yylineno); }
+     Exp SC { if(typesDontMatch(_stack.getType($1.name).data(), $4.type)) errorMismatch(yylineno); }
     | Call SC { /*empty*/ }
     | RETURN SC { if(!isVoid()) errorMismatch(yylineno); }
     | RETURN Exp SC { if(isVoid()) errorMismatch(yylineno); }
@@ -162,34 +165,34 @@ Type
 
 Exp
     : LPAREN Exp RPAREN {$$.type = $2.type;}
-    | Exp MD_BINOP Exp %prec MD_BINOP { if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
-    | Exp PM_BINOP Exp %prec PM_BINOP { if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
+    | Exp MD_BINOP Exp %prec MD_BINOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
+    | Exp PM_BINOP Exp %prec PM_BINOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
     | ID {if(!_stack.nameExists($1.name) || isFunc($1.type)) errorUndef(yylineno, $1.name); $$.type = $1.type;}
     | Call { $$.type=$1.type; }
     | NUM { $$.type=$1.type; }
-    | NUM B {if(byteTooLarge($1.intVal)) errorByteTooLarge(yylineno, $1.strVal); $$.type=$1.type; }
+    | NUM B {if(byteTooLarge($1.intVal)) errorByteTooLarge(yylineno, $1.strVal); $$.type=$2.type; }
     | STRING { $$.type=$1.type; }
     | TRUE { $$.type=$1.type; }
     | FALSE { $$.type=$1.type; }
     | NOT Exp { if(notBool($2.type)) errorMismatch(yylineno); $$.type=$2.type; }
     | Exp AND Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
     | Exp OR Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
-    | Exp EQ_RELOP Exp %prec EQ_RELOP {  if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
-    | Exp RE_RELOP Exp %prec RE_RELOP {  if(notIntOrBool($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
-    | LPAREN Type RPAREN Exp {if(notIntOrBool($2.type,$4.type)) errorMismatch(yylineno);$$.type = $2.type;}
+    | Exp EQ_RELOP Exp %prec EQ_RELOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
+    | Exp RE_RELOP Exp %prec RE_RELOP {printf("notIntOrByte: %d\n though:1type: %s 2type: %s",notIntOrByte($1.type,$3.type), $1.type,$3.type) ;  if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
+    | LPAREN Type RPAREN Exp {if(notIntOrByte($2.type,$4.type)) errorMismatch(yylineno); $$.type = $2.type;}
     ;
 
 %%
 char* join(char* s1, char* s2)
 {
-    printf("in join\n");
+    //printf("in join\n");
     int str_len=strlen(s1)+strlen(s2);
     char* joined_str = (char*)malloc(sizeof(char)*(str_len+1));
     strcpy(joined_str,s1);
     strcat(joined_str,s2);
     //not freeing memory, might be a problem atm.
-    printf("joined finished \n");
-    printf("joined_str: %s\n",joined_str);
+    //printf("joined finished \n");
+   // printf("joined_str: %s\n",joined_str);
     return joined_str;
 }
 
@@ -205,7 +208,8 @@ bool byteTooLarge(int value)
 }
 bool typesDontMatch(  char* LHS_type,  char* RHS_type)
 {
-    if (strcmp(LHS_type,RHS_type)!=0 && (strcmp(LHS_type,"int"))!=0 || (strcmp(RHS_type,"byte")!=0) )
+    //printf("val:%d\n",strcmp(LHS_type,RHS_type));
+    if (strcmp(LHS_type,RHS_type)!=0 && ( (strcmp(LHS_type,"int")!=0) || (strcmp(RHS_type,"byte")!=0) ) )
     {
         return true;
     }
@@ -215,13 +219,13 @@ bool typesDontMatch(  char* LHS_type,  char* RHS_type)
     }
 }
 
-bool notIntOrBool( char* converter_type,  char* converted_type)
+bool notIntOrByte( char* converter_type,  char* converted_type)
 {
 
-    if((strcmp(converter_type,"int")==0 && strcmp(converted_type,"bool")==0)
-         ||(strcmp(converter_type,"bool")==0 && strcmp(converted_type,"int")==0)
+    if((strcmp(converter_type,"int")==0 && strcmp(converted_type,"byte")==0)
+         ||(strcmp(converter_type,"byte")==0 && strcmp(converted_type,"int")==0)
          ||(strcmp(converter_type,"int")==0 && strcmp(converted_type,"int")==0)
-         ||(strcmp(converter_type,"bool")==0 && strcmp(converted_type,"bool")==0))
+         ||(strcmp(converter_type,"byte")==0 && strcmp(converted_type,"byte")==0))
          {
             return false;
          }

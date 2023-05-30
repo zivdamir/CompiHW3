@@ -80,7 +80,7 @@ class symbol_tables_stack{
         }
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
-            printf("insert begining\n");
+            //printf("insert begining\n");
             assert(this->top_scope() != nullptr);
             symbol_table* table = this->top_scope();
             if(is_override && !is_func){
@@ -122,32 +122,34 @@ class symbol_tables_stack{
                     table->insert(name, type, 0);
                 }
             }
-            printf("insert end\n"); 
+           // printf("insert end\n"); 
         }
- /*       void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
-    {
-        std::stringstream param_names_stream(param_names);
-        std::stringstream param_types_stream(type);
-        std::string segment;
-        std::vector<std::string> names_vec;
-        std::vector<std::string> types_vec;
-
-        while(std::getline(param_names_stream, segment, ','))
+        void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
         {
-            names_vec.push_back(segment);
+            std::stringstream param_names_stream(parameter_names);
+            std::stringstream param_types_stream(type);
+            std::string segment;
+            
+            
+            std::vector<std::string> names_vec;
+            while(std::getline(param_names_stream, segment, ','))
+            {
+                names_vec.push_back(segment);
+            }
+            std::vector<std::string> types_vec;
+            
+            while(std::getline(param_types_stream, segment, ','))
+            {
+                types_vec.push_back(segment);
+            }
+            
+            for(int param = 0; param < names_vec.size(); param++)
+            {
+                if(this->top_scope()->contains(names_vec.at(param))) output::errorDef(yylineno, names_vec.at(param));
+                this->top_scope()->insert(names_vec.at(param), types_vec.at(param), -(param+1));
+            }
+            
         }
-        while(std::getline(param_types_stream, segment, ','))
-        {
-            types_vec.push_back(segment);
-        }
-        int len = names_vec.size();
-        for(int i = 0; i < len; i++)
-        {
-            if(this->findByName(names_vec.at(i))) output::errorDef(yylineno, names_vec.at(i));
-            tables.top()->TableAddEntry(names_vec.at(i), -i - 1, types_vec.at(i));
-        }
-        
-    }*/
         
         string getType(string name)
         {
@@ -214,7 +216,7 @@ class symbol_tables_stack{
 
             if(main_func == nullptr 
             || (getFunctionParamsTypes(name)!= string(""))
-            || getFunctionreturnType(name) != ("VOID"))
+            || getFunctionreturnType(name) != ("void"))
             {
                 output::errorMainMissing();
             }
