@@ -17,6 +17,7 @@
     bool typesDontMatch( char* LHS_type,  char* RHS_type);
     bool notIntOrByte( char* converter_type,  char* converted_type);
     bool isFunc(char* type);
+    bool can_type_be_compared(char* t1,char* t2);
     bool expList_not_valid(string func_name, string exp_list);
     bool isVoid();
     char* biggerType(char* first, char* second);
@@ -72,12 +73,11 @@
 %%
 Program
     : Funcs {
-       // printf("Program->Func before validateMainFunction\n");
         if (yychar == YYEOF) {
             _stack.validateMainFunction();
+            _stack.pop_scope();
         }
-        //printf("Program->Func after validateMainFunction\n");
-
+        
     }
     ;
 
@@ -131,9 +131,9 @@ Statement
     | Call SC { /*empty*/ }
     | RETURN SC { if(!isVoid()) errorMismatch(yylineno); }
     | RETURN Exp SC { if(isVoid()) errorMismatch(yylineno); }
-    | IF LPAREN Exp RPAREN Statement {if(notBool($3.type)) errorMismatch(yylineno);  }
-    | IF LPAREN Exp RPAREN Statement ELSE Statement { if(notBool($3.type)) errorMismatch(yylineno); }
-    | WHILE {_stack.updateInWhile(true);} LPAREN Exp RPAREN Statement {if(notBool($3.type)) errorMismatch; _stack.updateInWhile(false);}
+    | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER 
+    | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER ELSE {_stack.push_scope();} Statement {_stack.pop_scope();}
+    | WHILE {_stack.push_scope();_stack.updateInWhile(true);} LPAREN Exp RPAREN Statement {if(notBool($3.type)) errorMismatch; _stack.pop_scope();_stack.updateInWhile(false);}
     | BREAK SC { if(!_stack.inWhileLoop()) errorUnexpectedBreak(yylineno);}
     | CONTINUE SC { if(!_stack.inWhileLoop()) {errorUnexpectedContinue(yylineno);}}
     ;
@@ -151,7 +151,15 @@ Call
     $$.type = _stack.getFunctionreturnType($1.name).data();
     }
     ;
-    
+NEW_SCOPE_MARKER 
+    : /*epsilon*/{_stack.push_scope();}
+    ;
+POP_SCOPE_MARKER
+    : /*epsilon*/ {_stack.pop_scope();}
+    ;
+CHECK_TYPE_MARKER
+    : Exp {if(notBool($1.type)) errorMismatch(yylineno); }
+    ;
 ExpList
     : Exp {  $$.type = $1.type; }
     | Exp COMMA ExpList { $$.type = join(join($1.type, ","),$3.type); }
@@ -239,9 +247,14 @@ bool isFunc(char* type)
 
 bool expList_not_valid(string func_name, string exp_list)
 {
-    std::vector<std::string> param_vec;
-     string params = _stack.getFunctionParamsTypes(func_name);
-            if(params!=exp_list)
+            std::vector<std::string> param_vec;
+            string params = _stack.getFunctionParamsTypes(func_name);
+            //printf("func_name: %s\n",func_name.data());
+            //printf("exp_list: %s\n",exp_list.data());
+            //printf("params: %s\n",params.data());
+            //make sure that params get int.
+            //typesDontMatch(params.data(),exp_list.data())
+            if(typesDontMatch(params.data(),exp_list.data()))//not absolutely correct.
             {
             errorPrototypeMismatch(yylineno, func_name);
             return true;

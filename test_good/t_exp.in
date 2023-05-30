@@ -1,0 +1,4 @@
+void main() {
+  int x = 5 if true else "foo";
+  return 0;
+}

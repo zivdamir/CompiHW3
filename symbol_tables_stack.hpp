@@ -213,7 +213,7 @@ class symbol_tables_stack{
 
         void validateMainFunction()
         {
-            get_global_scope()->printTable();
+            
             string name = "main";
             table_entry* main_func = this->findLastDefinedFunc(name);
             /*cout<<"hello leviiii"<<endl;

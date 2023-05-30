@@ -1,0 +1,5 @@
+//override main legit
+
+override void main(){
+    return;
+}

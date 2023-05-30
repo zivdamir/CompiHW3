@@ -1,0 +1,27 @@
+//override stress test
+
+override bool f(int x){
+    return true;
+}
+
+override int f(bool x){
+    return 1;
+}
+
+override int f(){
+    return 1;
+}
+
+override bool g(int x){
+    return true;
+}
+
+override int g(bool x){
+    return 1;
+}
+
+void main(){
+    {bool a = g(f());}
+    {int a = g(f(1));}
+    bool a = f(f(f(f(f(f(f(f())))))));
+}
