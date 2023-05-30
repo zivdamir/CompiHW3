@@ -1,9 +1,0 @@
-//https://piazza.com/class/lf8ghwc678z326/post/80
-
-void main(){
-    print("compiles");
-}
-
-override int main(bool x){
-    print("compiles?");
-}

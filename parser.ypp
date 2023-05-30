@@ -177,8 +177,8 @@ Exp
     | NOT Exp { if(notBool($2.type)) errorMismatch(yylineno); $$.type=$2.type; }
     | Exp AND Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
     | Exp OR Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
-    | Exp EQ_RELOP Exp %prec EQ_RELOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
-    | Exp RE_RELOP Exp %prec RE_RELOP {printf("notIntOrByte: %d\n though:1type: %s 2type: %s",notIntOrByte($1.type,$3.type), $1.type,$3.type) ;  if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "bool";}
+    | Exp EQ_RELOP Exp %prec EQ_RELOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "BOOL";}
+    | Exp RE_RELOP Exp %prec RE_RELOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "BOOL";}
     | LPAREN Type RPAREN Exp {if(notIntOrByte($2.type,$4.type)) errorMismatch(yylineno); $$.type = $2.type;}
     ;
 
@@ -198,7 +198,7 @@ char* join(char* s1, char* s2)
 
 bool notBool( char* type)
 {
-    return strcmp(type,"bool")!=0;
+    return strcmp(type,"BOOL")!=0;
 }
 
 bool byteTooLarge(int value)
@@ -209,7 +209,7 @@ bool byteTooLarge(int value)
 bool typesDontMatch(  char* LHS_type,  char* RHS_type)
 {
     //printf("val:%d\n",strcmp(LHS_type,RHS_type));
-    if (strcmp(LHS_type,RHS_type)!=0 && ( (strcmp(LHS_type,"int")!=0) || (strcmp(RHS_type,"byte")!=0) ) )
+    if (strcmp(LHS_type,RHS_type)!=0 && ( (strcmp(LHS_type,"INT")!=0) || (strcmp(RHS_type,"BYTE")!=0) ) )
     {
         return true;
     }
@@ -222,10 +222,10 @@ bool typesDontMatch(  char* LHS_type,  char* RHS_type)
 bool notIntOrByte( char* converter_type,  char* converted_type)
 {
 
-    if((strcmp(converter_type,"int")==0 && strcmp(converted_type,"byte")==0)
-         ||(strcmp(converter_type,"byte")==0 && strcmp(converted_type,"int")==0)
-         ||(strcmp(converter_type,"int")==0 && strcmp(converted_type,"int")==0)
-         ||(strcmp(converter_type,"byte")==0 && strcmp(converted_type,"byte")==0))
+    if((strcmp(converter_type,"INT")==0 && strcmp(converted_type,"BYTE")==0)
+         ||(strcmp(converter_type,"BYTE")==0 && strcmp(converted_type,"INT")==0)
+         ||(strcmp(converter_type,"INT")==0 && strcmp(converted_type,"INT")==0)
+         ||(strcmp(converter_type,"BYTE")==0 && strcmp(converted_type,"BYTE")==0))
          {
             return false;
          }
@@ -253,14 +253,14 @@ bool isVoid()
 {
      string func_ret_type = _stack.getCurrentfunctionreturnType();
      //convert to char*
-    return strcmp(func_ret_type.data(),"void")==0;
+    return strcmp(func_ret_type.data(),"VOID")==0;
 }
 
 
 char* biggerType(char* first, char* second)
 {
 
-    return strcmp(second,"byte")==0?second:first;
+    return strcmp(second,"BYTE")==0?second:first;
 
 }
 int main()

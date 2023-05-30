@@ -29,17 +29,17 @@ pm_binop                                        ([-+])
 relop                                           ([<>]=|>|<)
 eqop                                            ([=!]=)
 %%
-void                                                                                {add_type_att("void"); return VOID;}
-int                                                                                 {add_type_att("int"); return INT;}
-byte                                                                                {add_type_att("byte"); return BYTE;}
-b                                                                                   {add_type_att("byte"); return B;}
-bool                                                                                {add_type_att("bool"); return BOOL;}
+void                                                                                {add_type_att("VOID"); return VOID;}
+int                                                                                 {add_type_att("INT"); return INT;}
+byte                                                                                {add_type_att("BYTE"); return BYTE;}
+b                                                                                   {add_type_att("BYTE"); return B;}
+bool                                                                                {add_type_att("BOOL"); return BOOL;}
 override                                                                            {return OVERRIDE;}
 and                                                                                 return AND;
 or                                                                                  return OR;
 not                                                                                 return NOT;
-true                                                                                {add_type_att("bool"); return TRUE;}
-false                                                                               {add_type_att("bool"); return FALSE;}
+true                                                                                {add_type_att("BOOL"); return TRUE;}
+false                                                                               {add_type_att("BOOL"); return FALSE;}
 return                                                                              return RETURN;
 if                                                                                  return IF;
 else                                                                                return ELSE;
@@ -58,8 +58,8 @@ continue                                                                        
 {md_binop}                                                                          return MD_BINOP;
 {pm_binop}                                                                          return PM_BINOP;
 {id}                                                                                {add_name_att(yytext);return ID;}                                                                      
-{num}                                                                               {add_type_att("int");add_intVal_att(atoi(yytext));add_strVal_att(yytext); return NUM;}    
-{string}                                                                            {add_type_att("string");add_strVal_att(yytext); return STRING;}
+{num}                                                                               {add_type_att("INT");add_intVal_att(atoi(yytext));add_strVal_att(yytext); return NUM;}    
+{string}                                                                            {add_type_att("STRING");add_strVal_att(yytext); return STRING;}
 {whitespace}*                                                                       ;
 {comment}                                                                           ;
 .                                                                                   {output::errorLex(yylineno);exit(0);}

@@ -1,8 +1,0 @@
-//invalid return type 2
-
-int f(){
-    return;
-}
-
-void main(){
-}

@@ -1,8 +1,6 @@
 #ifndef COMPIHW3symbol_table__
 #define COMPIHW3symbol_table__
 #endif
-#include <vector>
-#include <iostream>
 #include "table_entry.hpp"
 
 //using namespace std;
@@ -18,19 +16,19 @@ public:
     {
         if(is_global_scope)
         {
-        table_entry* print_func_entry = new table_entry("print", 0, "string->void",true);
-        table_entry* printi_func_entry = new table_entry("printi", 0, "int->void",true);
-        this->entries.push_back(print_func_entry);
-        this->entries.push_back(printi_func_entry);
+            table_entry* print_func_entry = new table_entry("print", 0, "STRING->VOID",true, false);
+            table_entry* printi_func_entry = new table_entry("printi", 0, "INT->VOID",true, false);
+            this->entries.push_back(print_func_entry);
+            this->entries.push_back(printi_func_entry);
         }
     }
     //need to add Table~
-    void insert(string name,string type,int offset){
+    void insert(string name,string type,int offset, bool is_func, bool is_override){
        
-                table_entry *new_entry = new table_entry(name, offset, type);
-                printf("in insert before push back: %s\n", name.data());
+                table_entry *new_entry = new table_entry(name, offset, type, is_func, is_override);
+                //printf("in insert before push back: %s\n", name.data());
                 entries.push_back(new_entry);
-                printf("in insert after push back: %s\n", name.data());
+                //printf("in insert after push back: %s\n", name.data());
                 
     }
     bool contains_in_current_scope(string name){
@@ -63,8 +61,26 @@ public:
     }
     void printTable()
     {
-        cout << "replacement for printTable which needs to be implemented, symbol_table.hpp" << endl;
+        for (table_entry* entry : this->entries)
+        {
+            //bool num_commas = false;
+            if(entry->is_func)
+            {
+                std::vector<std::string> types = entry->fill_vector_func_params();
+                output::printID(entry->name, entry->offset, output::makeFunctionType(entry->get_return_type(), types));
+            }
+            else
+            {
+                output::printID(entry->name, entry->offset, entry->type);
+            }
+            
+        }
     }
+
+    
+
+
+
     void set_is_in_while(bool val){
         this->is_in_while = val;
     }
@@ -108,9 +124,11 @@ public:
         {
             for (table_entry* entry: entries){
                 if(entry->name == name){
+                    //cout<<"global object name "<<entry->name<<endl;
                     found = entry;
                 }
             }
+            //cout<<"end of iteration on global scope"<<endl;
         }
         return found;
     }

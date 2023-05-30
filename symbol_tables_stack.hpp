@@ -80,6 +80,7 @@ class symbol_tables_stack{
         }
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
+            //cout<<"insert input type:" <<type<<endl;
             //printf("insert begining\n");
             assert(this->top_scope() != nullptr);
             symbol_table* table = this->top_scope();
@@ -92,7 +93,7 @@ class symbol_tables_stack{
                 {   
                 int offset = this->offsets.top();
                 this->offsets.pop();
-                table->insert(name, type, offset);
+                table->insert(name, type, offset, is_func,is_override);
                 this->offsets.push(offset+1);
                 }
                 else{
@@ -113,13 +114,13 @@ class symbol_tables_stack{
                             output::errorOverrideWithoutDeclaration(yylineno, name);
                         }
                         else{
-                            table->insert(name, type, 0);
+                            table->insert(name, type, 0 ,is_func ,is_override);
                         }
                     }
                 }
                 else
                 {
-                    table->insert(name, type, 0);
+                    table->insert(name, type, 0,is_func ,is_override);
                 }
             }
            // printf("insert end\n"); 
@@ -146,7 +147,7 @@ class symbol_tables_stack{
             for(int param = 0; param < names_vec.size(); param++)
             {
                 if(this->top_scope()->contains(names_vec.at(param))) output::errorDef(yylineno, names_vec.at(param));
-                this->top_scope()->insert(names_vec.at(param), types_vec.at(param), -(param+1));
+                this->top_scope()->insert(names_vec.at(param), types_vec.at(param), -(param+1), false, false);
             }
             
         }
@@ -201,7 +202,8 @@ class symbol_tables_stack{
         {
             table_entry* last_func = this->findCurrentFunc();
             assert(last_func);
-            return last_func->get_return_type();
+            return "levi";
+            //return last_func->get_return_type();
         }
         string getFunctionParamsTypes(string name)
         {
@@ -211,12 +213,16 @@ class symbol_tables_stack{
 
         void validateMainFunction()
         {
-            string name = string("main");
+            get_global_scope()->printTable();
+            string name = "main";
             table_entry* main_func = this->findLastDefinedFunc(name);
-
-            if(main_func == nullptr 
-            || (getFunctionParamsTypes(name)!= string(""))
-            || getFunctionreturnType(name) != ("void"))
+            /*cout<<"hello leviiii"<<endl;
+            cout<<"getFunctionParamsTypes(name) : "<<getFunctionParamsTypes(name)<<endl;
+            cout<<"getFunctionreturnType(name) : "<<getFunctionreturnType(name)<<endl;
+            cout<<"main_func equals nullptr?: "<< (main_func==nullptr) <<endl;
+            cout<<"hello leviiii"<<endl;*/
+            if(main_func == nullptr || (getFunctionParamsTypes(name)!= "")
+            || getFunctionreturnType(name) != "VOID")
             {
                 output::errorMainMissing();
             }
