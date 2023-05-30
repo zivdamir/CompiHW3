@@ -2,25 +2,25 @@
     #include "hw3_output.hpp"
     
     #include <iostream>
-    #include <string>
+    #include <cstring>
     #include "symbol_tables_stack.hpp"
     
     extern int yylineno;
     int yylex();
-    void yyerror(const char*);
+    void yyerror( const char* s);
     
     using namespace output;
 
     symbol_tables_stack _stack = symbol_tables_stack();
-    bool notBool( string type);
+    bool notBool( char* type);
     bool byteTooLarge(int value);
-    bool typesDontMatch( string LHS_type,  string RHS_type);
-    bool notIntOrBool( string converter_type,  string converted_type);
-    bool isFunc(string type);
+    bool typesDontMatch( char* LHS_type,  char* RHS_type);
+    bool notIntOrBool( char* converter_type,  char* converted_type);
+    bool isFunc(char* type);
     bool expList_not_valid(string func_name, string exp_list);
     bool isVoid();
-    string biggerType(string first, string second);
-
+    char* biggerType(char* first, char* second);
+    char* join(char* s1,char* s2);
 
 
 
@@ -85,7 +85,7 @@ Funcs
 
 FuncDecl
     : OverRide RetType ID LPAREN Formals
-    { _stack.insert($2.name, ($4.type + string("->") + $1.type), true, $1.intVal, yylineno);}
+    { _stack.insert($2.name, join(join($4.type ,"->"),$1.type), true, $1.intVal, yylineno);}
     RPAREN LBRACE {_stack.push_scope();} Statements RBRACE {_stack.pop_scope();}
     ;
 OverRide
@@ -99,14 +99,14 @@ RetType
     ;
 
 Formals
-    : /*epsilon*/ {$$.type = string(""); $$.name = string("");  }
+    : /*epsilon*/ {$$.type = ""; $$.name = "";  }
     |FormalsList {$$.type = $1.type; $$.name = $1.name;}
     ;
 
 FormalsList
     : FormalDecl {$$.type = $1.type; $$.name = $1.name;}
-    | FormalDecl COMMA FormalsList {$$.type = $1.type + string(",") + $3.type;
-                                    $$.name = $1.name + string(",") + $3.name;}
+    | FormalDecl COMMA FormalsList {$$.type = join(join($1.type ,","), $3.type);
+                                    $$.name = join(join($1.name ,",") , $3.name);}
     ;
 FormalDecl
     : Type ID { $$.type = $1.type ; $$.name = $2.name; }
@@ -121,7 +121,7 @@ Statement
     | Type ID SC { _stack.insert($2.name , $1.type, false, false, yylineno);}
     | Type ID ASSIGN Exp SC {if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); _stack.insert($2.name , $1.type, false, false, yylineno); }
     | ID ASSIGN { if(!_stack.nameExists($1.name) || _stack.isFunc($1.name)) errorUndef(yylineno, $1.name);}
-     Exp SC { if(!typesDontMatch(_stack.getType($1.name), $4.type)) errorMismatch(yylineno); }
+     Exp SC { if(!typesDontMatch(_stack.getType($1.name).data(), $4.type)) errorMismatch(yylineno); }
     | Call SC { /*empty*/ }
     | RETURN SC { if(!isVoid()) errorMismatch(yylineno); }
     | RETURN Exp SC { if(isVoid()) errorMismatch(yylineno); }
@@ -136,19 +136,19 @@ Call
     : ID LPAREN ExpList RPAREN { if(expList_not_valid($1.name, $3.type)) errorPrototypeMismatch(yylineno, $1.name); 
     if(!_stack.nameExists($1.name) || !_stack.isFunc($1.name)) errorUndefFunc(yylineno, $1.name);
     $$.name = $1.name; 
-    $$.type = _stack.getFunctionreturnType($1.name);
+    $$.type = _stack.getFunctionreturnType($1.name).data();
     }
     | ID LPAREN RPAREN { 
-    if(expList_not_valid($1.name, string(""))) errorPrototypeMismatch(yylineno, $1.name); 
+    if(expList_not_valid($1.name, "")) errorPrototypeMismatch(yylineno, $1.name); 
     if(!_stack.nameExists($1.name) || !_stack.isFunc($1.name)) errorUndefFunc(yylineno, $1.name);
     $$.name = $1.name; 
-    $$.type = _stack.getFunctionreturnType($1.name);
+    $$.type = _stack.getFunctionreturnType($1.name).data();
     }
     ;
     
 ExpList
     : Exp {  $$.type = $1.type; }
-    | Exp COMMA ExpList { $$.type = $1.type + string(",") + $3.type; }
+    | Exp COMMA ExpList { $$.type = join(join($1.type, ","),$3.type); }
     ;
 
 Type
@@ -177,47 +177,54 @@ Exp
     ;
 
 %%
-
-
-bool notBool( string type)
+char* join(char* s1, char* s2)
 {
-    if(type==string("bool")) return false;
-    return true;
+    int str_len=strlen(s1)+strlen(s2);
+    char* joined_str = (char*)malloc(sizeof(char)*(str_len+1));
+    strcpy(joined_str,s1);
+    strcat(joined_str,s2);
+    //not freeing memory, might be a problem atm.
+    return joined_str;
+}
+
+bool notBool( char* type)
+{
+    return strcmp(type,"bool")!=0;
 }
 
 bool byteTooLarge(int value)
 {
-    if(value > 255) return true;
-    return false;
+    return value > 255;
+
 }
-bool typesDontMatch( string LHS_type,  string RHS_type)
+bool typesDontMatch(  char* LHS_type,  char* RHS_type)
 {
-    if (LHS_type!=RHS_type && (LHS_type != string("int") || RHS_type != string("byte")))
+    if (strcmp(LHS_type,RHS_type)!=0 && (strcmp(LHS_type,"int"))!=0 || (strcmp(RHS_type,"byte")!=0) )
     {
         return true;
     }
+    else
+    {
     return false;
+    }
 }
 
-bool notIntOrBool( string converter_type,  string converted_type)
+bool notIntOrBool( char* converter_type,  char* converted_type)
 {
-    if((converter_type==string("int") && converted_type==string("bool"))
-         ||(converter_type==string("bool") && converted_type==string("int"))
-         ||(converter_type==string("int") && converted_type==string("int"))
-         ||(converter_type==string("bool") && converted_type==string("bool")))
+
+    if((strcmp(converter_type,"int")==0 && strcmp(converted_type,"bool")==0)
+         ||(strcmp(converter_type,"bool")==0 && strcmp(converted_type,"int")==0)
+         ||(strcmp(converter_type,"int")==0 && strcmp(converted_type,"int")==0)
+         ||(strcmp(converter_type,"bool")==0 && strcmp(converted_type,"bool")==0))
          {
             return false;
          }
     return true;
 }
 
-bool isFunc(string type)
+bool isFunc(char* type)
 {
-    if(type=="func")
-    {
-        return true;
-    }
-    return false;
+    return strcmp(type,"func")==0;
 }
 
 bool expList_not_valid(string func_name, string exp_list)
@@ -238,30 +245,25 @@ bool expList_not_valid(string func_name, string exp_list)
 bool isVoid()
 {
      string func_ret_type = _stack.getCurrentfunctionreturnType();
-    if(func_ret_type == string("void"))
-    {
-        return true;
-    }
-    else{
-        return false;
-    }
-}
-void yyerror( char* s ) 
-{
-    errorSyn(yylineno);
+     //convert to char*
+    return strcmp(func_ret_type.data(),"void")==0;
 }
 
-string biggerType(string first, string second)
+
+char* biggerType(char* first, char* second)
 {
-    if(second==string("byte"))
-    {
-        return second;
-    }
-    return first;
+
+    return strcmp(second,"byte")==0?second:first;
+
 }
 
 
 int main()
 {
     return yyparse();
+}
+
+void yyerror( const char*  s ) 
+{
+    errorSyn(yylineno);
 }
