@@ -1,0 +1,9 @@
+//break after leaving a single while
+
+void main(){
+    while(true){
+        while(true)
+            return;
+        break;
+    }
+}

@@ -1,0 +1,19 @@
+int myfunc(int x) {
+    x = x + 3;
+    return x;
+}
+
+int return6(int x) {
+    int y = 6;
+    return y;
+}
+
+void main() {
+    bool c = false;
+    if (not c) {
+        int x = 6;
+        printi(return6(x));
+    }
+    else
+        syntax error;
+}
