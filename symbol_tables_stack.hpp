@@ -124,7 +124,8 @@ class symbol_tables_stack{
                     this->offsets.push(offset+1);
                 }
                 else{
-                    output::errorDef(yylineno,name);
+                    //cout << "not a func" << endl;
+                    output::errorDef(yylineno, name);
                 }
             }
             else{ //if is_func == true
@@ -144,6 +145,7 @@ class symbol_tables_stack{
                     false
                     ))
                     {
+                        //cout << "func but no override" << endl;
                         output::errorDef(yylineno, name);
                     }
                     else {
@@ -186,6 +188,7 @@ class symbol_tables_stack{
             {
                 if(this->top_scope()->contains(names_vec.at(param)))
                 {
+                    //cout << "add function parameters:" <<parameter_names<<" "<<type<< endl;
                     output::errorDef(yylineno, names_vec.at(param));
                 }
                 this->top_scope()->insert(names_vec.at(param), types_vec.at(param), -(param + 1), false, false);

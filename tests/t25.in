@@ -1,6 +1,0 @@
-void main() {
-	int x = 254;
-	byte y = (byte)x;
-	byte z = 2;
-	byte w = y + z;
-}

@@ -1,1 +1,2 @@
-line 3: identifier main is already defined
+---end scope---
+line 7: unexpected break statement

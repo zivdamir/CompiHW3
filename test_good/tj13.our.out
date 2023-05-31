@@ -1,1 +1,3 @@
-line 3: identifier f is already defined
+---end scope---
+x INT -1
+line 7: identifier f is already defined

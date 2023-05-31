@@ -1,9 +1,0 @@
-int foo() {
-  int x = 3;
-  return x;
-}
-
-void main() {
-  printi(foo());
-  return;
-}

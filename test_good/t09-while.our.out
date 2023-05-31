@@ -1,1 +1,5 @@
-line 4: identifier foo is already defined
+---end scope---
+---end scope---
+---end scope---
+---end scope---
+line 13: unexpected break statement
