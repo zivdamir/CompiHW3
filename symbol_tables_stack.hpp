@@ -210,16 +210,11 @@ class symbol_tables_stack{
         {
             this->is_in_while = in_while;
         }
-
-        table_entry* findLastDefinedFunc(string name)
-        {
-            return this->get_global_scope()->getLastDefinedInScope(name);
-        }
-        table_entry* findCurrentFunc()
+        table_entry* getCurrentFunc()
         {
             return this->get_global_scope()->getLastEntry();
         }
-        int numOfFuncExist(const string& name,const string& returnType,const string& parameters,bool exactly_the_same)
+        int numOfFuncExist(const string& name,const string& parameters,bool exactly_the_same)//,const string& returnType
         {
             int func_count = 0;
             //bool exists = false;
@@ -228,9 +223,9 @@ class symbol_tables_stack{
             {
                 for(table_entry* entry : entries){
                     bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
-                    bool same_retType = is_desired_return_type(entry->get_return_type(), returnType, exactly_the_same);
+                    //bool same_retType = is_desired_return_type(entry->get_return_type(), returnType, exactly_the_same);
                     bool same_name = (entry->name == name);
-                    if(same_parameters&&same_retType&&same_name)
+                    if(same_parameters&&same_name)//&&same_retType
                     {
                         func_count++;
                     }
@@ -238,9 +233,9 @@ class symbol_tables_stack{
             }
             return func_count;
         }
-        bool funcExists(const string& name,const string& returnType,const string& parameters,bool exactly_the_same)
+        bool funcExists(const string& name,const string& parameters,bool exactly_the_same)//const string& returnType
         {
-            return numOfFuncExist(name, returnType, parameters, exactly_the_same) >= 1;
+            return numOfFuncExist(name, parameters, exactly_the_same) >= 1;
         }
         bool is_comparable_parameter_list(const string& parameters1, const string& parameters2, bool exactly_the_same)
         {
@@ -306,29 +301,38 @@ class symbol_tables_stack{
         /**these functions assume the function does exist**/
         string getFunctionreturnType(string name)
         {
-            table_entry* func_entry = this->findLastDefinedFunc(name);
+            table_entry* func_entry = this->findFunc(name);
             return func_entry->get_return_type();
         }
         string getCurrentfunctionreturnType()
         {
-            table_entry* last_func = this->findCurrentFunc();
+            table_entry* last_func = this->getCurrentFunc();
             assert(last_func);
             return last_func->get_return_type();
             //return last_func->get_return_type();
         }
         string getFunctionParamsTypes(string name)
         {
-            table_entry* func_entry = this->findLastDefinedFunc(name);
+            table_entry* func_entry = this->findFunc(name);
             return func_entry->get_function_parameters_types();
         }
-        table_entry* findFunc(const string& name,const string& returnType,const string& parameters,bool exactly_the_same){
+        table_entry* findFunc(const string& name,const string& parameters="",bool exactly_the_same=false,bool search_name_only=true)//,const string& returnType=""
+        {
+
             table_entry *func = nullptr;
             std::vector<table_entry *> &entries = this->get_global_scope()->entries;
+            if(search_name_only==true)
+            {
+                func =  this->get_global_scope()->getLastDefinedInScope(name);
+
+            }
+            else{
+            cout << "for name: " << name << "parameters are(for debugging,comment please, symbol_tables_stack.hpp line 331~): " << parameters << endl;
             if(!entries.empty())
             {
                 for(table_entry* entry : entries){
                     bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
-                    bool same_retType = is_desired_return_type(entry->get_return_type(), returnType, exactly_the_same);
+                    bool same_retType = is_desired_return_type(entry->get_return_type(), exactly_the_same);
                     bool same_name = (entry->name == name);
                     if(same_parameters&&same_retType&&same_name)
                     {
@@ -337,13 +341,19 @@ class symbol_tables_stack{
                     }
                 }
             }
+            }
             return func;
+        }
+        string getFuncReturnType(const string& func_name,const string& parameters)
+        {
+            table_entry *func = this->findFunc(func_name, parameters, false, false);
+            return func->get_return_type();
         }
         void validateMainFunction()
         {
             
             string name = "main";
-            table_entry* main_func = this->findLastDefinedFunc(name);
+            table_entry* main_func = this->findFunc(name);
             /*cout<<"hello leviiii"<<endl;
             cout<<"getFunctionParamsTypes(name) : "<<getFunctionParamsTypes(name)<<endl;
             cout<<"getFunctionreturnType(name) : "<<getFunctionreturnType(name)<<endl;
