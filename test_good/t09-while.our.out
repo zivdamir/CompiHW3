@@ -1,8 +1,4 @@
-validateId
----end scope---
-validateId
----end scope---
-validateId
 ---end scope---
 ---end scope---
-line 13: unexpected break statement
+---end scope---
+line 12: type mismatch

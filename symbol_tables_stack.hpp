@@ -32,10 +32,15 @@ class symbol_tables_stack{
         {
             int func_count = 0;
             //bool exists = false;
+            //cout << "we need name to be " << name << endl;
+            //cout << "we need params to be " << parameters << endl;
             std::vector<table_entry *> &entries = this->get_global_scope()->entries;
             if(!entries.empty())
             {
                 for(table_entry* entry : entries){
+                    
+                   // cout << "entry name "<<entry->name<<endl;
+                   // cout << "paramaters "<<entry->get_function_parameters_types()<<endl;
                     bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
                     //bool same_retType = is_desired_return_type(entry->get_return_type(), returnType, exactly_the_same);
                     bool same_name = (entry->name == name);
@@ -326,23 +331,26 @@ class symbol_tables_stack{
         }
         bool inWhileLoop()
         {
-            if(is_in_while) 
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return is_in_while;
         }
 
         /*other*/
         void validateCall(const string& name, const string& params,int yylineno)
         {
+            
             if(numOfFuncExist(name, params, false) == 0)
             {
-                cout << "validate call" << endl;
+                if(findFunc(name)!=nullptr)
+                {
+                    //if theres exist a func with this name -> wrong parameters.
+               output::errorPrototypeMismatch(yylineno, name);
+                }
+                else
+                {
+                //perhaps we need to check if there is another name with the same parameters.
+                //cout << "validate call" << endl;
                 output::errorUndefFunc(yylineno, name);
+                }
             }
             else if(numOfFuncExist(name, params, false) > 1)
             {
@@ -367,7 +375,7 @@ class symbol_tables_stack{
         }
         void validateId(const string& name, int yylineno)
         {
-            cout << "validateId" << endl;
+            //cout << "validateId" << endl;
             if ((!nameExists(name)) || isFunc(name))
                 output::errorUndef(yylineno, name);
         }
