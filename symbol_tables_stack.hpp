@@ -113,6 +113,16 @@ class symbol_tables_stack{
         }
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
+            if(name=="main"&&is_override)
+            {
+                if(findFunc("main")!=nullptr){
+                    //we found main beforehand.. how come :)?
+                    output::errorFuncNoOverride(yylineno, "main");
+                }
+                else{
+                    output::errorMainOverride(yylineno);
+                }
+            }
             assert(this->top_scope() != nullptr);
             if(is_override && !is_func){
                 assert(false);
