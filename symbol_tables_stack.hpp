@@ -347,6 +347,10 @@ class symbol_tables_stack{
         string getFuncReturnType(const string& func_name,const string& parameters)
         {
             table_entry *func = this->findFunc(func_name, parameters, false, false);
+            if(func == nullptr)
+            {
+            assert(false);
+            }
             return func->get_return_type();
         }
         void validateMainFunction()
