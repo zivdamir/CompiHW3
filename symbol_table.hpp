@@ -10,7 +10,8 @@ class symbol_table
 public:
     symbol_table *parent;
     vector<table_entry *> entries;
-    symbol_table(bool is_global_scope = false, symbol_table *parent = nullptr) : parent(parent)
+    bool in_while;
+    symbol_table(bool is_global_scope = false, symbol_table *parent = nullptr, bool in_while = false) : parent(parent), in_while(in_while)
     {
         if(is_global_scope)
         {
@@ -21,6 +22,12 @@ public:
         }
     }
     //need to add Table~
+    void set_in_while(bool val){
+        this->in_while = val;
+    }
+    bool get_in_while(){
+        return this->in_while;
+    }
     void insert(string name,string type,int offset, bool is_func, bool is_override){
        
                 table_entry *new_entry = new table_entry(name, offset, type, is_func, is_override);

@@ -80,6 +80,7 @@ class symbol_tables_stack{
         /*Stack Methods*/
         void push_scope()
         {
+            bool is_in_while_inherited_from_father = false;
             symbol_table *parent = nullptr;
             bool is_global = true;
             int offset = 0;
@@ -89,8 +90,9 @@ class symbol_tables_stack{
                 parent = this->tables.top();
                 is_global = false;
                 offset = offsets.top();
+                is_in_while_inherited_from_father = parent->get_in_while();
             }
-            symbol_table *new_scope = new symbol_table(is_global, parent);
+            symbol_table *new_scope = new symbol_table(is_global, parent,is_in_while_inherited_from_father);
             if(!new_scope){
                 assert(false);//bad allocation
             }
@@ -184,7 +186,7 @@ class symbol_tables_stack{
         /*While Loop Declarer*/
         void updateInWhile(bool in_while)
         {
-            this->is_in_while = in_while;
+            this->tables.top()->set_in_while(in_while);
         }
         
         /*Adding Additional Information For Function Declarations*/
@@ -346,7 +348,7 @@ class symbol_tables_stack{
         }
         bool inWhileLoop()
         {
-            return is_in_while;
+            return this->tables.top()->get_in_while();
         }
 
         /*other*/

@@ -132,8 +132,8 @@ Statement
     | RETURN Exp SC { if(isVoid()) errorMismatch(yylineno); }
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER 
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER ELSE {_stack.push_scope();} Statement {_stack.pop_scope();}
-    | WHILE {_stack.push_scope();_stack.updateInWhile(true);} LPAREN Exp { if(notBool($4.type)) {errorMismatch(yylineno);}} RPAREN Statement { _stack.pop_scope();_stack.updateInWhile(false);}
-    | BREAK SC { if(!_stack.inWhileLoop()) errorUnexpectedBreak(yylineno);}
+    | WHILE {_stack.push_scope();_stack.updateInWhile(true);} LPAREN Exp { if(notBool($4.type)) {errorMismatch(yylineno);}} RPAREN Statement {_stack.updateInWhile(false); _stack.pop_scope();}
+    | BREAK SC { if(!_stack.inWhileLoop()) {errorUnexpectedBreak(yylineno);}}
     | CONTINUE SC { if(!_stack.inWhileLoop()) {errorUnexpectedContinue(yylineno);}}
     ;
 
