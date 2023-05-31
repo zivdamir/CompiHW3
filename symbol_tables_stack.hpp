@@ -144,20 +144,26 @@ class symbol_tables_stack{
                     {
                         output::errorOverrideWithoutDeclaration(yylineno, name);
                     }
-                    else 
-                    if(funcExists(identical_name_func_in_table->name,
-                    identical_name_func_in_table->get_function_parameters_types(),
-                    false
-                    ))
+                    /*
+                    in this case the is a previos function with the same name. 
+                    & both the new definition and the old one are override.
+                    two problems might occure:
+                    1. both the old defition and the new definition are exactly the same!
+                    2. the old defition and the new definition can cause ambiguity.
+                    
+                    here we check only if problem 1. occures
+                    */
+                    else if(numOfFuncExist(name, get_function_parameters_types_eux(type), true)!=0)
                     {
-                        //cout << "func but no override" << endl;
+                        cout<<"identical_name_func_in_table->name"<<identical_name_func_in_table->name<<endl;
+                        cout<<"identical_name_func_in_table->name"<<identical_name_func_in_table->get_function_parameters_types()<<endl;
+                        cout<<"yo"<<endl;
                         output::errorDef(yylineno, name);
                     }
                     else {
                         table->insert(name, type, 0 ,is_func ,is_override);
                     }
-                    }
-                
+                }
                 else
                 {
                     table->insert(name, type, 0, is_func ,is_override);
@@ -313,7 +319,6 @@ class symbol_tables_stack{
             }
         }
         
-        
         //variables Q
         bool is_same_type(const string& type1,const string& type2)
         {
@@ -340,16 +345,16 @@ class symbol_tables_stack{
             
             if(numOfFuncExist(name, params, false) == 0)
             {
-                if(findFunc(name)!=nullptr)
+                if(findFunc(name) != nullptr)
                 {
                     //if theres exist a func with this name -> wrong parameters.
-               output::errorPrototypeMismatch(yylineno, name);
+                    output::errorPrototypeMismatch(yylineno, name);
                 }
                 else
                 {
                 //perhaps we need to check if there is another name with the same parameters.
                 //cout << "validate call" << endl;
-                output::errorUndefFunc(yylineno, name);
+                    output::errorUndefFunc(yylineno, name);
                 }
             }
             else if(numOfFuncExist(name, params, false) > 1)
@@ -357,7 +362,7 @@ class symbol_tables_stack{
                 output::errorAmbiguousCall(yylineno, name);
             }
         }
-        void validateMainFunction()
+        void validateMainFunction(int yylineno)
         {
             
             string name = "main";
@@ -371,6 +376,10 @@ class symbol_tables_stack{
             || getFunctionreturnType(name) != "VOID")
             {
                 output::errorMainMissing();
+            }
+            if(main_func->is_override)
+            {
+                output::errorMainOverride(yylineno);
             }
         }
         void validateId(const string& name, int yylineno)
