@@ -202,7 +202,7 @@ class symbol_tables_stack{
         {
             table_entry* last_func = this->findCurrentFunc();
             assert(last_func);
-            return "levi";
+            return last_func->get_return_type();
             //return last_func->get_return_type();
         }
         string getFunctionParamsTypes(string name)

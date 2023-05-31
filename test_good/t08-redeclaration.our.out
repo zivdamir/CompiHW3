@@ -4,4 +4,16 @@ y INT -2
 ---end scope---
 x BYTE -1
 y INT -2
+line number:10
+func_name: foo
+exp_list: INT,INT
+params: INT,INT
+line number:11
+func_name: bar
+exp_list: BYTE,INT
+params: BYTE,INT
+line number:12
+func_name: foo
+exp_list: BYTE,INT
+params: INT,INT
 line 12: prototype mismatch, function foo

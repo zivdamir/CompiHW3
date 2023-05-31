@@ -247,24 +247,75 @@ bool isFunc(char* type)
 
 bool expList_not_valid(string func_name, string exp_list)
 {
-            std::vector<std::string> param_vec;
-            string params = _stack.getFunctionParamsTypes(func_name);
-            //printf("func_name: %s\n",func_name.data());
-            //printf("exp_list: %s\n",exp_list.data());
-            //printf("params: %s\n",params.data());
-            //make sure that params get int.
-            //typesDontMatch(params.data(),exp_list.data())
-            if(typesDontMatch(params.data(),exp_list.data()))//not absolutely correct.
-            {
-            errorPrototypeMismatch(yylineno, func_name);
-            return true;
-            }
-            return false;
-
+    std::vector<std::string> param_vec;
+    string params = _stack.getFunctionParamsTypes(func_name);
+    std::cout<<"line number:"<< yylineno << std::endl;
+    printf("func_name: %s\n",func_name.data());
+    printf("exp_list: %s\n",exp_list.data());
+    printf("params: %s\n",params.data());
+    //make sure that params get int.
+    //typesDontMatch(params.data(),exp_list.data())
+    if(typesDontMatch(params.data(),exp_list.data()))//not absolutely correct.
+    {
+        return true;
+    }
+    return false;
 }
+/*
+void validateExpList(char* expList, char* funcName)
+{
+    std::vector<std::string> param_vec;
+    const char* params = SymbolTable.findByName(funcName)->get_function_param_types().c_str();
+    if(strcmp(params, "") == 0)
+    {
+        if(strcmp(params, expList) != 0)
+            error0PrototypeMismatch(yylineno, funcName, param_vec);
+    }
+    std::stringstream exp_list_stream(expList);
+
+    std::stringstream params_stream(params);
+
+    std::string segment1(params);
+    std::string segment2(expList);
+
+    bool error = false;
+    int num_commas1 = 0, num_commas2 = 0;
+
+    for (char c : segment1) 
+    {
+        if (c == ',') num_commas1++;
+    }
+
+    for (char c : segment2) 
+    {
+        if (c == ',') num_commas2++;
+    }
+    if (num_commas1 != num_commas2)
+        error = true;
+
+    
+    while(std::getline(params_stream, segment1, ',') && std::getline(exp_list_stream, segment2, ','))
+    {
+        
+        if(!error && !typeAssignCheck(segment1.c_str(), segment2.c_str()))
+            error = true;
+    }
+    std::stringstream vec_stream(params);
+    while(std::getline(vec_stream, segment1, ','))
+    {
+        param_vec.push_back(segment1);
+    }    
+
+    if(error) error0PrototypeMismatch(yylineno, funcName, param_vec);
+}*/
+
+
+
+
 bool isVoid()
 {
      string func_ret_type = _stack.getCurrentfunctionreturnType();
+     //std::cout<<"isVoid function return type:\n"<<func_ret_type<<endl;
      //convert to char*
     return strcmp(func_ret_type.data(),"VOID")==0;
 }

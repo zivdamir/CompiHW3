@@ -7,4 +7,12 @@ x BOOL -1
 x INT -1
 ---end scope---
 x BOOL -1
+line number:24
+func_name: f
+exp_list: 
+params: 
+line number:24
+func_name: g
+exp_list: INT
+params: BOOL
 line 24: prototype mismatch, function g
