@@ -8,20 +8,71 @@
 #include <sstream>
 
 class symbol_tables_stack{
-    public:
+    private:
+        /*inner functions*/
+        int _count_parameters(const string& parameters){
+            int count = 0;
+            if (parameters == "")
+            {
+                return count;
+            }
+            else{
+                count = 1;
+                for (char c : parameters)
+                {
+                    if(c==',')
+                    {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+        int numOfFuncExist(const string& name,const string& parameters,bool exactly_the_same)//,const string& returnType
+        {
+            int func_count = 0;
+            //bool exists = false;
+            std::vector<table_entry *> &entries = this->get_global_scope()->entries;
+            if(!entries.empty())
+            {
+                for(table_entry* entry : entries){
+                    bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
+                    //bool same_retType = is_desired_return_type(entry->get_return_type(), returnType, exactly_the_same);
+                    bool same_name = (entry->name == name);
+                    if(same_parameters&&same_name)//&&same_retType
+                    {
+                        func_count++;
+                    }
+                }
+            }
+            return func_count;
+        }
+        symbol_table* get_global_scope(){
+            symbol_table* curr_table = tables.top();
+            assert(curr_table != nullptr);
+            while (curr_table->parent!=nullptr)
+            {
+                curr_table = curr_table->parent;
+            }
+            assert(curr_table != nullptr);
+            return curr_table;
+        }
+        bool is_desired_return_type(const string& return_type1,const string& return_type2,bool exactly_the_same){
+            return exactly_the_same ? return_type1 == return_type2 : is_same_type(return_type1, return_type2);
+        }
 
-        // symbol_table* glob_scope = new symbol_table(true);
-        // tables.push(glob_scope);
-        // offsets.push(0);
+    public:
+        /*Class Variables*/
         stack<symbol_table*> tables;
         stack<int> offsets;
         bool is_in_while = false;
+        
+        /*Init*/
         symbol_tables_stack(){
             push_scope();
-            // 1.do we want to init a global scope with te construction
-            // 2. levi needs to undetrstands pop deletes the object!
-            //  inWhile = false;
-        }//init tables and offset
+        }
+
+        /*Stack Methods*/
         void push_scope()
         {
             symbol_table *parent = nullptr;
@@ -41,14 +92,6 @@ class symbol_tables_stack{
             this->tables.push(new_scope);
             this->offsets.push(offset);
         }
-        void setInWhile(bool value)
-        {
-            tables.top()->set_is_in_while(value);
-        }
-        bool notInWhile()
-        {
-            return (tables.top()->get_in_while()==false);
-        }
         void pop_scope(){
             output::endScope();
             this->tables.top()->printTable();
@@ -63,43 +106,6 @@ class symbol_tables_stack{
         {
             return tables.top();
         }
-        symbol_table* get_global_scope(){
-            //returns the global_scope to find functions and global variables and such
-            symbol_table* curr_table = tables.top();
-            assert(curr_table != nullptr);
-            while (curr_table->parent!=nullptr)
-            {
-                curr_table = curr_table->parent;
-            }
-            assert(curr_table != nullptr);
-            return curr_table;
-        }
-        bool is_curr_scope_global(){
-            assert(!this->tables.empty());
-            return (this->tables.top()->parent == nullptr);
-        }
-
-        /*bool check_before_insert(string name, string ret_type, bool is_func, bool is_override,int yylineno)
-        {
-            symbol_table* table = this->top_scope();
-            if( (!is_func) && (table->contains(name) == true) )
-            {
-                return output::errorDef(yylineno,name);
-            }
-            else if(table->contains(name))//if is_func == true
-            {
-                table_entry* identical_name_func_in_table = table->findByName(name);
-                if (identical_name_func_in_table->isOverride()==false)
-                {
-                   output::errorFuncNoOverride(yylineno, name);
-                }
-                else if(!is_override)
-                {
-                     output::errorOverrideWithoutDeclaration(yylineno, name);
-                }
-            }
-        }*/
-
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
             assert(this->top_scope() != nullptr);
@@ -134,7 +140,6 @@ class symbol_tables_stack{
                     }
                     else 
                     if(funcExists(identical_name_func_in_table->name,
-                    identical_name_func_in_table->get_return_type(),
                     identical_name_func_in_table->get_function_parameters_types(),
                     false
                     ))
@@ -151,8 +156,15 @@ class symbol_tables_stack{
                     table->insert(name, type, 0, is_func ,is_override);
                 }
             }
-           // printf("insert end\n"); 
         }
+
+        /*While Loop Declarer*/
+        void updateInWhile(bool in_while)
+        {
+            this->is_in_while = in_while;
+        }
+        
+        /*Adding Additional Information For Function Declarations*/
         void symbol_table_add_function_parameter_entries(std::string parameter_names, std::string type, int yylineno)
         {
             std::stringstream param_names_stream(parameter_names);
@@ -180,62 +192,81 @@ class symbol_tables_stack{
             }
             
         }
-        
+
+        /*getters*/
         string getType(string name)
         {
             table_entry* var_entry = this->top_scope()->findByName(name);
             return var_entry->getType();
         }
-        bool nameExists(string name)
+        /**getters: these functions assume the function does exist**/
+        string getFunctionreturnType(string name)
         {
-            return this->top_scope()->contains(name);
+            table_entry* func_entry = this->findFunc(name);
+            return func_entry->get_return_type();
+        }
+        string getCurrentfunctionreturnType()
+        {
+            table_entry* last_func = this->get_global_scope()->getLastEntry();
+            assert(last_func);
+            return last_func->get_return_type();
+            //return last_func->get_return_type();
+        }
+        string getFunctionParamsTypes(string name)
+        {
+            table_entry* func_entry = this->findFunc(name);
+            return func_entry->get_function_parameters_types();
+        }
+        string getFuncReturnType(const string& func_name,const string& parameters)
+        {
+            table_entry *func = this->findFunc(func_name, parameters, false, false);
+            if(func == nullptr)
+            {
+            assert(false);
+            }
+            return func->get_return_type();
+        }
+        
+
+        table_entry* findFunc(const string& name,const string& parameters="",bool exactly_the_same=false,bool search_name_only=true)//,const string& returnType=""
+        {
+
+            table_entry *func = nullptr;
+            std::vector<table_entry *> &entries = this->get_global_scope()->entries;
+            if(search_name_only==true)
+            {
+                func =  this->get_global_scope()->getLastDefinedInScope(name);
+
+            }
+            else{
+           // cout << "for name: " << name << "parameters are(for debugging,comment please, symbol_tables_stack.hpp line 331~): " << parameters << endl;
+            if(!entries.empty())
+            {
+                for(table_entry* entry : entries){
+                    bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
+                    //bool same_retType = is_desired_return_type(entry->get_return_type(), exactly_the_same);
+                    bool same_name = (entry->name == name);
+                    if(same_parameters&&same_name)//&&same_retType
+                    {
+                        func = entry;
+                        break;
+                    }
+                }
+            }
+            }
+            return func;
+        }
+        
+        /*boolean checks*/
+        //function Q
+        bool funcExists(const string& name,const string& parameters,bool exactly_the_same)//const string& returnType
+        {
+            return numOfFuncExist(name, parameters, exactly_the_same) >= 1;
         }
         bool isFunc(string name)
         {
             table_entry* var_entry = this->top_scope()->findByName(name);
             return var_entry->isFunc();
-        }
-        bool inWhileLoop()
-        {
-            if(is_in_while) 
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        void updateInWhile(bool in_while)
-        {
-            this->is_in_while = in_while;
-        }
-        table_entry* getCurrentFunc()
-        {
-            return this->get_global_scope()->getLastEntry();
-        }
-        int numOfFuncExist(const string& name,const string& parameters,bool exactly_the_same)//,const string& returnType
-        {
-            int func_count = 0;
-            //bool exists = false;
-            std::vector<table_entry *> &entries = this->get_global_scope()->entries;
-            if(!entries.empty())
-            {
-                for(table_entry* entry : entries){
-                    bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
-                    //bool same_retType = is_desired_return_type(entry->get_return_type(), returnType, exactly_the_same);
-                    bool same_name = (entry->name == name);
-                    if(same_parameters&&same_name)//&&same_retType
-                    {
-                        func_count++;
-                    }
-                }
-            }
-            return func_count;
-        }
-        bool funcExists(const string& name,const string& parameters,bool exactly_the_same)//const string& returnType
-        {
-            return numOfFuncExist(name, parameters, exactly_the_same) >= 1;
         }
         bool is_comparable_parameter_list(const string& parameters1, const string& parameters2, bool exactly_the_same)
         {
@@ -273,85 +304,46 @@ class symbol_tables_stack{
             return is_the_same;
             }
         }
-        int _count_parameters(const string& parameters){
-            int count = 0;
-            if (parameters == "")
-            {
-                return count;
-            }
-            else{
-                count = 1;
-                for (char c : parameters)
-                {
-                    if(c==',')
-                    {
-                        count++;
-                    }
-                }
-            }
-            return count;
-        }
+        
+        
+        //variables Q
         bool is_same_type(const string& type1,const string& type2)
         {
             return (type1 == type2) ? true : (type1 == "INT" && type2 == "BYTE");
         }
-        bool is_desired_return_type(const string& return_type1,const string& return_type2,bool exactly_the_same){
-            return exactly_the_same ? return_type1 == return_type2 : is_same_type(return_type1, return_type2);
-        }
-        /**these functions assume the function does exist**/
-        string getFunctionreturnType(string name)
+        bool nameExists(string name)
         {
-            table_entry* func_entry = this->findFunc(name);
-            return func_entry->get_return_type();
+            return this->top_scope()->contains(name);
         }
-        string getCurrentfunctionreturnType()
-        {
-            table_entry* last_func = this->getCurrentFunc();
-            assert(last_func);
-            return last_func->get_return_type();
-            //return last_func->get_return_type();
-        }
-        string getFunctionParamsTypes(string name)
-        {
-            table_entry* func_entry = this->findFunc(name);
-            return func_entry->get_function_parameters_types();
-        }
-        table_entry* findFunc(const string& name,const string& parameters="",bool exactly_the_same=false,bool search_name_only=true)//,const string& returnType=""
-        {
 
-            table_entry *func = nullptr;
-            std::vector<table_entry *> &entries = this->get_global_scope()->entries;
-            if(search_name_only==true)
-            {
-                func =  this->get_global_scope()->getLastDefinedInScope(name);
-
-            }
-            else{
-            cout << "for name: " << name << "parameters are(for debugging,comment please, symbol_tables_stack.hpp line 331~): " << parameters << endl;
-            if(!entries.empty())
-            {
-                for(table_entry* entry : entries){
-                    bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
-                    bool same_retType = is_desired_return_type(entry->get_return_type(), exactly_the_same);
-                    bool same_name = (entry->name == name);
-                    if(same_parameters&&same_retType&&same_name)
-                    {
-                        func = entry;
-                        break;
-                    }
-                }
-            }
-            }
-            return func;
+        //scope Q
+        bool is_curr_scope_global(){
+            assert(!this->tables.empty());
+            return (this->tables.top()->parent == nullptr);
         }
-        string getFuncReturnType(const string& func_name,const string& parameters)
+        bool inWhileLoop()
         {
-            table_entry *func = this->findFunc(func_name, parameters, false, false);
-            if(func == nullptr)
+            if(is_in_while) 
             {
-            assert(false);
+                return true;
             }
-            return func->get_return_type();
+            else
+            {
+                return false;
+            }
+        }
+
+        /*other*/
+        void validateCall(const string& name, const string& params,int yylineno)
+        {
+            if(numOfFuncExist(name, params, false) == 0)
+            {
+                output::errorUndefFunc(yylineno, name);
+            }
+            else if(numOfFuncExist(name, params, false) > 1)
+            {
+                output::errorAmbiguousCall(yylineno, name);
+            }
         }
         void validateMainFunction()
         {
@@ -368,5 +360,9 @@ class symbol_tables_stack{
             {
                 output::errorMainMissing();
             }
+        }
+        void validateId(const string& name, int yylineno)
+        {
+            if( (!nameExists(name)) || isFunc(name) ) output::errorUndef(yylineno, name);
         }
 };

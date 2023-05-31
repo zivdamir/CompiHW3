@@ -10,8 +10,6 @@ class symbol_table
 public:
     symbol_table *parent;
     vector<table_entry *> entries;
-    //bool is_global_scope;
-    bool is_in_while = false;
     symbol_table(bool is_global_scope = false, symbol_table *parent = nullptr) : parent(parent)
     {
         if(is_global_scope)
@@ -78,16 +76,6 @@ public:
     }
 
     
-
-
-
-    void set_is_in_while(bool val){
-        this->is_in_while = val;
-    }
-    bool get_in_while()
-    {
-        return this->is_in_while;
-    }
     table_entry* findByNameInScope(string name)
     {
         table_entry* found = nullptr;
