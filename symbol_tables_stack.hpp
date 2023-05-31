@@ -341,6 +341,7 @@ class symbol_tables_stack{
         {
             if(numOfFuncExist(name, params, false) == 0)
             {
+                cout << "validate call" << endl;
                 output::errorUndefFunc(yylineno, name);
             }
             else if(numOfFuncExist(name, params, false) > 1)
@@ -366,6 +367,8 @@ class symbol_tables_stack{
         }
         void validateId(const string& name, int yylineno)
         {
-            if( (!nameExists(name)) || isFunc(name) ) output::errorUndef(yylineno, name);
+            cout << "validateId" << endl;
+            if ((!nameExists(name)) || isFunc(name))
+                output::errorUndef(yylineno, name);
         }
 };

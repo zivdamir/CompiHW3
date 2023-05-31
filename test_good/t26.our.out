@@ -1,3 +1,5 @@
+validateId
 ---end scope---
 x INT 0
+validate call
 line 7: function foo is not defined
