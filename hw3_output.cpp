@@ -110,3 +110,7 @@ void output::errorAmbiguousCall(int lineno, const string& id) {
     cout << "line " << lineno << ": ambiguous call to overloaded function " << id << endl;
     exit(0);
 }
+void output::errorMainOverride(int lineno){
+    cout << "line " << lineno << ": main is not allowed to be overridden" << endl;
+    exit(0);
+}

@@ -36,6 +36,7 @@ namespace output{
     void errorFuncNoOverride(int lineno, const string& id);
     void errorOverrideWithoutDeclaration(int lineno, const string& id);
     void errorAmbiguousCall(int lineno, const string& id);
+    void errorMainOverride(int lineno);
 }
 
 #endif

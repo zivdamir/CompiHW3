@@ -73,7 +73,7 @@
 Program
     : Funcs {
         if (yychar == YYEOF) {
-            _stack.validateMainFunction();
+            _stack.validateMainFunction(yylineno);
             _stack.pop_scope();
         }
         
