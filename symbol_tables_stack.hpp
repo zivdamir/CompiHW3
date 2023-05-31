@@ -78,26 +78,47 @@ class symbol_tables_stack{
             assert(!this->tables.empty());
             return (this->tables.top()->parent == nullptr);
         }
+
+        /*bool check_before_insert(string name, string ret_type, bool is_func, bool is_override,int yylineno)
+        {
+            symbol_table* table = this->top_scope();
+            if( (!is_func) && (table->contains(name) == true) )
+            {
+                return output::errorDef(yylineno,name);
+            }
+            else if(table->contains(name))//if is_func == true
+            {
+                table_entry* identical_name_func_in_table = table->findByName(name);
+                if (identical_name_func_in_table->isOverride()==false)
+                {
+                   output::errorFuncNoOverride(yylineno, name);
+                }
+                else if(!is_override)
+                {
+                     output::errorOverrideWithoutDeclaration(yylineno, name);
+                }
+            }
+        }*/
+
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
-            //cout<<"insert input type:" <<type<<endl;
-            //printf("insert begining\n");
             assert(this->top_scope() != nullptr);
-            symbol_table* table = this->top_scope();
             if(is_override && !is_func){
                 assert(false);
             }
+
+            symbol_table* table = this->top_scope();
             if(!is_func)
             {
                 if (table->contains(name) == false)
                 {   
-                int offset = this->offsets.top();
-                this->offsets.pop();
-                table->insert(name, type, offset, is_func,is_override);
-                this->offsets.push(offset+1);
+                    int offset = this->offsets.top();
+                    this->offsets.pop();
+                    table->insert(name, type, offset, is_func,is_override);
+                    this->offsets.push(offset+1);
                 }
                 else{
-                output::errorDef(yylineno,name);
+                    output::errorDef(yylineno,name);
                 }
             }
             else{ //if is_func == true
@@ -107,20 +128,22 @@ class symbol_tables_stack{
                     {
                         output::errorFuncNoOverride(yylineno, name);
                     }
-                    else
+                    else if(!is_override)
                     {
-                        if(!is_override)
-                        {
-                            output::errorOverrideWithoutDeclaration(yylineno, name);
-                        }
-                        else{
-                            table->insert(name, type, 0 ,is_func ,is_override);
-                        }
+                        output::errorOverrideWithoutDeclaration(yylineno, name);
+                    }
+                    else if(there exist a fucntion with the same name, return type & params)
+                    {
+                        output::errorDef(yylineno, name);
+                    }
+                    else {
+                        table->insert(name, type, 0 ,is_func ,is_override);
+                    }
                     }
                 }
                 else
                 {
-                    table->insert(name, type, 0,is_func ,is_override);
+                    table->insert(name, type, 0, is_func ,is_override);
                 }
             }
            // printf("insert end\n"); 
