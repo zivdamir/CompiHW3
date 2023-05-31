@@ -132,7 +132,12 @@ class symbol_tables_stack{
                     {
                         output::errorOverrideWithoutDeclaration(yylineno, name);
                     }
-                    else if(there exist a fucntion with the same name, return type & params)
+                    else 
+                    if(funcExists(identical_name_func_in_table->name,
+                    identical_name_func_in_table->get_return_type(),
+                    identical_name_func_in_table->get_function_parameters_types(),
+                    false
+                    ))
                     {
                         output::errorDef(yylineno, name);
                     }
@@ -140,7 +145,7 @@ class symbol_tables_stack{
                         table->insert(name, type, 0 ,is_func ,is_override);
                     }
                     }
-                }
+                
                 else
                 {
                     table->insert(name, type, 0, is_func ,is_override);
@@ -153,8 +158,6 @@ class symbol_tables_stack{
             std::stringstream param_names_stream(parameter_names);
             std::stringstream param_types_stream(type);
             std::string segment;
-            
-            
             std::vector<std::string> names_vec;
             while(std::getline(param_names_stream, segment, ','))
             {
@@ -169,8 +172,11 @@ class symbol_tables_stack{
             
             for(int param = 0; param < names_vec.size(); param++)
             {
-                if(this->top_scope()->contains(names_vec.at(param))) output::errorDef(yylineno, names_vec.at(param));
-                this->top_scope()->insert(names_vec.at(param), types_vec.at(param), -(param+1), false, false);
+                if(this->top_scope()->contains(names_vec.at(param)))
+                {
+                    output::errorDef(yylineno, names_vec.at(param));
+                }
+                this->top_scope()->insert(names_vec.at(param), types_vec.at(param), -(param + 1), false, false);
             }
             
         }
@@ -232,7 +238,7 @@ class symbol_tables_stack{
             }
             return func_count;
         }
-        bool funcExist(const string& name,const string& returnType,const string& parameters,bool exactly_the_same)
+        bool funcExists(const string& name,const string& returnType,const string& parameters,bool exactly_the_same)
         {
             return numOfFuncExist(name, returnType, parameters, exactly_the_same) >= 1;
         }
