@@ -132,7 +132,7 @@ Statement
     | RETURN Exp SC { if(isVoid()) errorMismatch(yylineno); }
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER 
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER ELSE {_stack.push_scope();} Statement {_stack.pop_scope();}
-    | WHILE {_stack.push_scope();_stack.updateInWhile(true);} LPAREN Exp {if(notBool($3.type)) {errorMismatch(yylineno);}} RPAREN Statement { _stack.pop_scope();_stack.updateInWhile(false);}
+    | WHILE {_stack.push_scope();_stack.updateInWhile(true);} LPAREN Exp { if(notBool($4.type)) {errorMismatch(yylineno);}} RPAREN Statement { _stack.pop_scope();_stack.updateInWhile(false);}
     | BREAK SC { if(!_stack.inWhileLoop()) errorUnexpectedBreak(yylineno);}
     | CONTINUE SC { if(!_stack.inWhileLoop()) {errorUnexpectedContinue(yylineno);}}
     ;
@@ -184,8 +184,8 @@ Exp
     | NOT Exp { if(notBool($2.type)) errorMismatch(yylineno); $$.type=$2.type; }
     | Exp AND Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
     | Exp OR Exp { if(notBool($1.type) || notBool($3.type)) errorMismatch(yylineno); $$.type=$1.type; }
-    | Exp EQ_RELOP Exp %prec EQ_RELOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "BOOL";}
-    | Exp RE_RELOP Exp %prec RE_RELOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = "BOOL";}
+    | Exp EQ_RELOP Exp %prec EQ_RELOP { if(notIntOrByte($1.type,$3.type)) {errorMismatch(yylineno);} $$.type = "BOOL";}
+    | Exp RE_RELOP Exp %prec RE_RELOP { if(notIntOrByte($1.type,$3.type)) {errorMismatch(yylineno);} $$.type = "BOOL"; }
     | LPAREN Type RPAREN Exp {if(notIntOrByte($2.type,$4.type)) errorMismatch(yylineno); $$.type = $2.type;}
     ;
 
@@ -228,12 +228,13 @@ bool typesDontMatch(  char* LHS_type,  char* RHS_type)
 
 bool notIntOrByte( char* converter_type,  char* converted_type)
 {
-
+    
     if((strcmp(converter_type,"INT")==0 && strcmp(converted_type,"BYTE")==0)
          ||(strcmp(converter_type,"BYTE")==0 && strcmp(converted_type,"INT")==0)
          ||(strcmp(converter_type,"INT")==0 && strcmp(converted_type,"INT")==0)
          ||(strcmp(converter_type,"BYTE")==0 && strcmp(converted_type,"BYTE")==0))
          {
+            
             return false;
          }
     return true;
