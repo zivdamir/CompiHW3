@@ -163,8 +163,8 @@ class symbol_tables_stack{
                     in this case the is a previos function with the same name. 
                     & both the new definition and the old one are override.
                     two problems might occure:
-                    1. both the old defition and the new definition are exactly the same!
-                    2. the old defition and the new definition can cause ambiguity.
+                    1. both the old defition and the new definition are exactly the same! ->done
+                    2. the old defition and the new definition can cause ambiguity.->need to test
                     
                     here we check only if problem 1. occures
                     */
