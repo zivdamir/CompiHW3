@@ -115,6 +115,7 @@ class symbol_tables_stack{
         }
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
+            //our problem: override functions aren't being inserted,when only the type is different.(void foo, int foo)
             if(name=="main"&&is_override)
             {
                 if(findFunc("main")!=nullptr){
@@ -156,6 +157,8 @@ class symbol_tables_stack{
                     {
                         output::errorOverrideWithoutDeclaration(yylineno, name);
                     }
+                    //this can't be here. it has to be checked after inserting parameters.
+                    //we have no idea how to do so afterwards.
                     /*
                     in this case the is a previos function with the same name. 
                     & both the new definition and the old one are override.
@@ -165,11 +168,16 @@ class symbol_tables_stack{
                     
                     here we check only if problem 1. occures
                     */
-                    else if(numOfFuncExist(name, get_function_parameters_types_eux(type), true)!=0)
+                    /*else if(numOfFuncExist(name, get_function_parameters_types_eux(type), true)!=0)
                     {
                         cout<<"identical_name_func_in_table->name"<<identical_name_func_in_table->name<<endl;
                         cout<<"identical_name_func_in_table->name"<<identical_name_func_in_table->get_function_parameters_types()<<endl;
                         cout<<"yo"<<endl;
+                        output::errorDef(yylineno, name);
+                    }*/
+                    else if(findFunc(name,get_function_parameters_types_eux(type),true,false,get_return_type_aux(type,true),true)!=nullptr)
+                    {
+                        //same override with the same name.
                         output::errorDef(yylineno, name);
                     }
                     else {
@@ -254,7 +262,8 @@ class symbol_tables_stack{
         }
         
 
-        table_entry* findFunc(const string& name,const string& parameters="",bool exactly_the_same=false,bool search_name_only=true)//,const string& returnType=""
+        table_entry* findFunc(const string& name,const string& parameters="",bool exactly_the_same=false,bool search_name_only=true,
+        const string& returnType="",bool include_retType_in_search=false)
         {
 
             table_entry *func = nullptr;
@@ -270,9 +279,14 @@ class symbol_tables_stack{
             {
                 for(table_entry* entry : entries){
                     bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
-                    //bool same_retType = is_desired_return_type(entry->get_return_type(), exactly_the_same);
+                    bool same_retType = is_desired_return_type(entry->get_return_type(),returnType, exactly_the_same);
                     bool same_name = (entry->name == name);
-                    if(same_parameters&&same_name)//&&same_retType
+                    bool search_condition = same_parameters && same_name;
+                    if(include_retType_in_search==true)//adding features to include retTypeAlso.
+                    {
+                        search_condition = search_condition && same_retType;
+                    }
+                    if (search_condition) //&&same_retType
                     {
                         func = entry;
                         break;

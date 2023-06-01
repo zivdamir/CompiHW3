@@ -21,7 +21,19 @@ string get_function_parameters_types_eux(const string& iterator)
             return iterator.substr(0,position);
         }
 }
-
+string get_return_type_aux(const string& type, bool is_func )
+{
+           if(!is_func){
+            return type;
+        }
+        else{
+            const string& iterator = type;
+            int length = iterator.length();
+            int position = iterator.find("->");
+            assert(position != std::string::npos);
+            return iterator.substr(position+2,length);
+        }
+}
 
 class table_entry
 {
@@ -40,16 +52,7 @@ class table_entry
         
     }
     string get_return_type(){
-        if(!is_func){
-            return type;
-        }
-        else{
-            string iterator = this->type;
-            int length = iterator.length();
-            int position = iterator.find("->");
-            assert(position != std::string::npos);
-            return iterator.substr(position+2,length);
-        }
+        return get_return_type_aux(this->type, this->is_func);
     }
     string get_function_parameters_types()
     {
