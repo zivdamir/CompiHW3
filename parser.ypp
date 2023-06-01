@@ -128,8 +128,8 @@ Statement
     | ID ASSIGN { if(!_stack.nameExists($1.name) || _stack.isFunc($1.name)) errorUndef(yylineno, $1.name);}
      Exp SC { if(typesDontMatch(_stack.getType($1.name).data(), $4.type)) errorMismatch(yylineno); }
     | Call SC { /*empty*/ }
-    | RETURN SC { if(!isVoid()) errorMismatch(yylineno); }
-    | RETURN Exp SC { if(isVoid()) errorMismatch(yylineno); }
+    | RETURN SC { if(!isVoid()||_stack.getCurrentfunctionreturnType()!="VOID") errorMismatch(yylineno); }
+    | RETURN Exp SC { if(isVoid()||!_stack.is_desired_return_type(_stack.getCurrentfunctionreturnType(),string($2.type),false)) errorMismatch(yylineno); }
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER 
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER ELSE {_stack.push_scope();} Statement {_stack.pop_scope();}
     | WHILE {_stack.push_scope();_stack.updateInWhile(true);} LPAREN Exp { if(notBool($4.type)) {errorMismatch(yylineno);}} RPAREN Statement {_stack.updateInWhile(false); _stack.pop_scope();}

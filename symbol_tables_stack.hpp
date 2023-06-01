@@ -62,9 +62,7 @@ class symbol_tables_stack{
             assert(curr_table != nullptr);
             return curr_table;
         }
-        bool is_desired_return_type(const string& return_type1,const string& return_type2,bool exactly_the_same){
-            return exactly_the_same ? return_type1 == return_type2 : is_same_type(return_type1, return_type2);
-        }
+        
 
     public:
         /*Class Variables*/
@@ -344,7 +342,9 @@ class symbol_tables_stack{
             return is_the_same;
             }
         }
-        
+        bool is_desired_return_type(const string& return_type1,const string& return_type2,bool exactly_the_same){
+            return exactly_the_same ? return_type1 == return_type2 : is_same_type(return_type1, return_type2);
+        }
         //variables Q
         bool is_same_type(const string& type1,const string& type2)
         {
