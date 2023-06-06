@@ -41,7 +41,7 @@ public:
         if (!entries.empty())
         {
             for (table_entry* entry: entries){
-                if(entry->name == name ){
+                if(entry->name == name){
                     found = true;
                     break;
                 }

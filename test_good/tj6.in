@@ -1,9 +1,7 @@
-//https://piazza.com/class/lf8ghwc678z326/post/80
+//same name as function
+
+int foo(){return 1;}
 
 void main(){
-    print("compiles");
-}
-
-override int main(bool x){
-    print("compiles?");
+    bool foo;
 }

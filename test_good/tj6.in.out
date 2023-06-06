@@ -1,2 +1,2 @@
 ---end scope---
-line 7: function main was declared before as non-override function
+line 6: identifier foo is already defined

@@ -57,18 +57,6 @@ class table_entry
     string get_function_parameters_types()
     {
         return get_function_parameters_types_eux(this->type);
-        
-        //printf("the entry in get_function_parameters_types:\n this->name:%s\n this->type: %s\n,offset:%d\n this->is_func:%d\n this->is_override:%d\nthis->is_func: %d\n",
-        //this->name.data(),this->type.data(), this->offset, this->is_func,this->is_override, this->is_func);
-       // assert(this->is_func);//make sure this is func!, would crash otherwise
-      //  string iterator = this->type;
-      //  int position = iterator.find("->");
-      //  if(position == std::string::npos) return EMPTY_STRING;
-       // else 
-      //  {
-            //printf("get_function_parameters_types returns: %s\n",iterator.substr(0,position).data());
-       //     return iterator.substr(0,position);
-      //  }
     }
     bool isOverride()
     {

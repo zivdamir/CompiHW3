@@ -113,23 +113,36 @@ class symbol_tables_stack{
         }
         void insert(string name, string type, bool is_func, bool is_override,int yylineno)
         {
-            //our problem: override functions aren't being inserted,when only the type is different.(void foo, int foo)
-            if(name=="main"&&is_override)
-            {
-                if(findFunc("main")!=nullptr){
-                    //we found main beforehand.. how come :)?
-                    output::errorFuncNoOverride(yylineno, "main");
-                }
-                else{
-                    output::errorMainOverride(yylineno);
-                }
-            }
             assert(this->top_scope() != nullptr);
+            symbol_table* table = this->top_scope();
+            //our problem: override functions aren't being inserted,when only the type is different.(void foo, int foo)
+        if(name=="main")
+            {
+                if(is_override)
+                    {
+                    if(findFunc("main")!=nullptr){
+                    //we found main beforehand.. how come :)?
+                        output::errorFuncNoOverride(yylineno, "main");
+                    }
+                    else{
+                        output::errorMainOverride(yylineno);
+                        }
+                    }
+                else{ //not override
+                    
+                        if (findFunc("main") != nullptr)
+                        {
+                        output::errorDef(yylineno, "main");
+                        }
+                        else{
+                        table->insert("main", type, 0, is_func, is_override);   
+                        }
+            }
+            }
+        else{
             if(is_override && !is_func){
                 assert(false);
             }
-
-            symbol_table* table = this->top_scope();
             if(!is_func)
             {
                 if (table->contains(name) == false)
@@ -149,46 +162,37 @@ class symbol_tables_stack{
                     table_entry* identical_name_func_in_table = table->findByName(name);
                     if (identical_name_func_in_table->isOverride()==false)
                     {
+                        if(is_override)
+                        {
                         output::errorFuncNoOverride(yylineno, name);
-                    }
-                    else if(!is_override)
-                    {
-                        output::errorOverrideWithoutDeclaration(yylineno, name);
-                    }
-                    //this can't be here. it has to be checked after inserting parameters.
-                    //we have no idea how to do so afterwards.
-                    /*
-                    in this case the is a previos function with the same name. 
-                    & both the new definition and the old one are override.
-                    two problems might occure:
-                    1. both the old defition and the new definition are exactly the same! ->done
-                    2. the old defition and the new definition can cause ambiguity.->need to test
-                    
-                    here we check only if problem 1. occures
-                    */
-                    /*else if(numOfFuncExist(name, get_function_parameters_types_eux(type), true)!=0)
-                    {
-                        cout<<"identical_name_func_in_table->name"<<identical_name_func_in_table->name<<endl;
-                        cout<<"identical_name_func_in_table->name"<<identical_name_func_in_table->get_function_parameters_types()<<endl;
-                        cout<<"yo"<<endl;
+                        }
+                        else{
                         output::errorDef(yylineno, name);
-                    }*/
-                    else if(findFunc(name,get_function_parameters_types_eux(type),true,false,get_return_type_aux(type,true),true)!=nullptr)
-                    {
-                        //same override with the same name.
-                        output::errorDef(yylineno, name);
+                        }
                     }
-                    else {
-                        table->insert(name, type, 0 ,is_func ,is_override);
+                    else 
+                    {//if the function we found is override.
+                    //if the function we want to insert ins't override
+                        if(!is_override)
+                        {
+                            output::errorOverrideWithoutDeclaration(yylineno, name);
+                        }
+                        else{
+                            //if it's the same name exactly:
+                             if(this->findFunc(name,get_function_parameters_types_eux(type),true,false,get_return_type_aux(type,true),true)!=nullptr){
+                                output::errorDef(yylineno, name);
+                             }
+                        }
+                        table->insert(name, type, 0 ,is_func ,is_override);//no errors until now
                     }
                 }
                 else
                 {
                     table->insert(name, type, 0, is_func ,is_override);
                 }
+             }
             }
         }
-
         /*While Loop Declarer*/
         void updateInWhile(bool in_while)
         {
@@ -260,8 +264,7 @@ class symbol_tables_stack{
         }
         
 
-        table_entry* findFunc(const string& name,const string& parameters="",bool exactly_the_same=false,bool search_name_only=true,
-        const string& returnType="",bool include_retType_in_search=false)
+        table_entry* findFunc(const string& name,const string& parameters="",bool exactly_the_same=false,bool search_name_only=true, const string& returnType="",bool include_retType_in_search=false)
         {
 
             table_entry *func = nullptr;
