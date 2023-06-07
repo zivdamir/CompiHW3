@@ -28,7 +28,7 @@ class symbol_tables_stack{
             }
             return count;
         }
-        int numOfFuncExist(const string& name,const string& parameters,bool exactly_the_same)//,const string& returnType
+        int numOfFuncExist(const string& name,const string& parameters_given_in_calling,bool exactly_the_same)//,const string& returnType
         {
             int func_count = 0;
             //bool exists = false;
@@ -37,13 +37,13 @@ class symbol_tables_stack{
             std::vector<table_entry *> &entries = this->get_global_scope()->entries;
             if(!entries.empty())
             {
-                for(table_entry* entry : entries){
+                for(table_entry* existing_function : entries){
                     
                    // cout << "entry name "<<entry->name<<endl;
                    // cout << "paramaters "<<entry->get_function_parameters_types()<<endl;
-                    bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
+                    bool same_parameters = is_comparable_parameter_list(parameters_given_in_calling, existing_function->get_function_parameters_types(), exactly_the_same);
                     //bool same_retType = is_desired_return_type(entry->get_return_type(), returnType, exactly_the_same);
-                    bool same_name = (entry->name == name);
+                    bool same_name = (existing_function->name == name);
                     if(same_parameters&&same_name)//&&same_retType
                     {
                         func_count++;
@@ -279,8 +279,8 @@ class symbol_tables_stack{
             if(!entries.empty())
             {
                 for(table_entry* entry : entries){
-                    bool same_parameters = is_comparable_parameter_list(entry->get_function_parameters_types(), parameters, exactly_the_same);
-                    bool same_retType = is_desired_return_type(entry->get_return_type(),returnType, exactly_the_same);
+                    bool same_parameters = is_comparable_parameter_list(parameters,entry->get_function_parameters_types(), exactly_the_same);
+                    bool same_retType = is_desired_return_type(returnType, entry->get_return_type(), exactly_the_same);
                     bool same_name = (entry->name == name);
                     bool search_condition = same_parameters && same_name;
                     if(include_retType_in_search==true)//adding features to include retTypeAlso.
@@ -309,7 +309,7 @@ class symbol_tables_stack{
             table_entry* var_entry = this->top_scope()->findByName(name);
             return var_entry->isFunc();
         }
-        bool is_comparable_parameter_list(const string& parameters1, const string& parameters2, bool exactly_the_same)
+        bool is_comparable_parameter_list(const string& called_parameters, const string& existing_func_parameters, bool exactly_the_same)
         {
             //if exactly_the_same=false
             //byte and int are comparable, but string and bool aren't.
@@ -317,41 +317,41 @@ class symbol_tables_stack{
             //exactly_the_same =true, compare int to int only.
 
             if(exactly_the_same==true){
-                return parameters1 == parameters2;
+                return called_parameters == existing_func_parameters;
             }
             else
             {
                 
-                if(parameters1==parameters2){
+                if(called_parameters==existing_func_parameters){
                     return true;
                 }
-                int num_of_parameters1 = _count_parameters(parameters1);
-                int num_of_parameters2 = _count_parameters(parameters2);
+                int num_of_parameters1 = _count_parameters(called_parameters);
+                int num_of_parameters2 = _count_parameters(existing_func_parameters);
                 if(num_of_parameters1!=num_of_parameters2)
                 {
                     return false;
                 }
 
-            std::stringstream params_1_iterator(parameters1);//csv'd
-            std::stringstream params_2_iterator(parameters2);
+            std::stringstream params_1_iterator(called_parameters);//csv'd
+            std::stringstream params_2_iterator(existing_func_parameters);
             bool is_the_same = true;
-            string curr_type_parameters1;
-            string curr_type_parameters2;
-            while (std::getline(params_1_iterator, curr_type_parameters1, ',') 
-            && std::getline(params_2_iterator, curr_type_parameters2, ','))
+            string curr_param_from_called_parameters;
+            string curr_param_from_existing_func;
+            while (std::getline(params_1_iterator, curr_param_from_called_parameters, ',') 
+            && std::getline(params_2_iterator, curr_param_from_existing_func, ','))
             {
-               is_the_same =is_the_same && is_same_type(curr_type_parameters1, curr_type_parameters2);
+               is_the_same =is_the_same && is_same_type(curr_param_from_called_parameters, curr_param_from_existing_func);
             }
             return is_the_same;
             }
         }
-        bool is_desired_return_type(const string& return_type1,const string& return_type2,bool exactly_the_same){
-            return exactly_the_same ? return_type1 == return_type2 : is_same_type(return_type1, return_type2);
+        bool is_desired_return_type(const string& in_func_return_type,const string& declared_func_return_type,bool exactly_the_same){
+            return exactly_the_same ? in_func_return_type == declared_func_return_type : is_same_type(in_func_return_type, declared_func_return_type);
         }
         //variables Q
-        bool is_same_type(const string& type1,const string& type2)
+        bool is_same_type(const string& curr_type_from_called_function,const string& type_from_existing_function)
         {
-            return (type1 == type2) ? true : (type1 == "INT" && type2 == "BYTE");
+            return (curr_type_from_called_function == type_from_existing_function) ? true : (curr_type_from_called_function == "BYTE" && type_from_existing_function == "INT");
         }
         bool nameExists(string name)
         {
@@ -370,9 +370,8 @@ class symbol_tables_stack{
 
         /*other*/
         void validateCall(const string& name, const string& params,int yylineno)
-        {
-            
-            if(numOfFuncExist(name, params, false) == 0)
+        {   
+            if (numOfFuncExist(name, params, false) == 0)
             {
                 if(findFunc(name) != nullptr)
                 {
@@ -388,19 +387,14 @@ class symbol_tables_stack{
             }
             else if(numOfFuncExist(name, params, false) > 1)
             {
+                //something here isn't correct.. 
                 output::errorAmbiguousCall(yylineno, name);
             }
         }
         void validateMainFunction(int yylineno)
         {
-            
             string name = "main";
             table_entry* main_func = this->findFunc(name);
-            /*cout<<"hello leviiii"<<endl;
-            cout<<"getFunctionParamsTypes(name) : "<<getFunctionParamsTypes(name)<<endl;
-            cout<<"getFunctionreturnType(name) : "<<getFunctionreturnType(name)<<endl;
-            cout<<"main_func equals nullptr?: "<< (main_func==nullptr) <<endl;
-            cout<<"hello leviiii"<<endl;*/
             if(main_func == nullptr || (getFunctionParamsTypes(name)!= "")
             || getFunctionreturnType(name) != "VOID")
             {

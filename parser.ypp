@@ -123,13 +123,12 @@ Statements
     ;
 Statement 
     : LBRACE {_stack.push_scope();} Statements RBRACE {_stack.pop_scope();}
-    | Type ID SC { _stack.insert($2.name , $1.type, false, false, yylineno);}
-    | Type ID ASSIGN Exp SC { if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); _stack.insert($2.name , $1.type, false, false, yylineno); }
-    | ID ASSIGN { if(!_stack.nameExists($1.name) || _stack.isFunc($1.name)) errorUndef(yylineno, $1.name);}
-     Exp SC { if(typesDontMatch(_stack.getType($1.name).data(), $4.type)) errorMismatch(yylineno); }
+    | Type ID SC { _stack.insert($2.name , $1.type, false, false, yylineno); $2.type=$1.type;}
+    | Type ID ASSIGN Exp SC { if(typesDontMatch($1.type, $4.type)) errorMismatch(yylineno); $2.type=$1.type; _stack.insert($2.name , $2.type, false, false, yylineno); }
+    | ID ASSIGN { if(!_stack.nameExists($1.name) || _stack.isFunc($1.name)) errorUndef(yylineno, $1.name);} Exp SC { if(typesDontMatch(_stack.getType($1.name).data(), $4.type)) errorMismatch(yylineno); }
     | Call SC { /*empty*/ }
     | RETURN SC { if(!isVoid()||_stack.getCurrentfunctionreturnType()!="VOID") errorMismatch(yylineno); }
-    | RETURN Exp SC { if(isVoid()||!_stack.is_desired_return_type(_stack.getCurrentfunctionreturnType(),string($2.type),false)) errorMismatch(yylineno); }
+    | RETURN Exp SC { if(isVoid()||!_stack.is_desired_return_type(string($2.type),_stack.getCurrentfunctionreturnType(),false)) errorMismatch(yylineno); }
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER 
     | IF NEW_SCOPE_MARKER LPAREN CHECK_TYPE_MARKER RPAREN Statement POP_SCOPE_MARKER ELSE {_stack.push_scope();} Statement {_stack.pop_scope();}
     | WHILE {_stack.push_scope();_stack.updateInWhile(true);} LPAREN Exp { if(notBool($4.type)) {errorMismatch(yylineno);}} RPAREN Statement {_stack.updateInWhile(false); _stack.pop_scope();}
@@ -161,7 +160,7 @@ CHECK_TYPE_MARKER
     ;
 ExpList
     : Exp {  $$.type = $1.type; }
-    | Exp COMMA ExpList { $$.type = join(join($1.type, ","),$3.type); }
+    | Exp COMMA ExpList { $$.type = join(join($1.type, ","),$3.type);  }
     ;
 
 Type
@@ -174,10 +173,10 @@ Exp
     : LPAREN Exp RPAREN {$$.type = $2.type;}
     | Exp MD_BINOP Exp %prec MD_BINOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
     | Exp PM_BINOP Exp %prec PM_BINOP { if(notIntOrByte($1.type,$3.type)) errorMismatch(yylineno); $$.type = biggerType($1.type, $3.type); }
-    | ID {_stack.validateId(string($1.name),yylineno); $$.type = $1.type;}
+    | ID {_stack.validateId(string($1.name),yylineno); $$.type = _stack.getType(string($1.name)).data();}
     | Call { $$.type=$1.type; }
-    | NUM { $$.type=$1.type; }
-    | NUM B {if(byteTooLarge($1.intVal)) errorByteTooLarge(yylineno, $1.strVal); $$.type=$2.type; }
+    | NUM { $$.type=$1.type;  }
+    | NUM B {if(byteTooLarge($1.intVal)) {errorByteTooLarge(yylineno, $1.strVal);} $$.type=$2.type; }
     | STRING { $$.type=$1.type; }
     | TRUE { $$.type=$1.type; }
     | FALSE { $$.type=$1.type; }
@@ -199,7 +198,7 @@ char* join(char* s1, char* s2)
     strcat(joined_str,s2);
     
     //not freeing memory, might be a problem atm.
-    
+
     return joined_str;
 }
 
